@@ -17,3 +17,6 @@ ssh <insertUserName>@Pi-FoodPilot
 
 We used the `Raspberry Pi Imager` to flash an SD-Card with a headless OS.<br>
 See: [Raspberry Pi Documentation - Install an OS onto boot media](https://www.raspberrypi.com/documentation/computers/getting-started.html#install)
+
+## Project Documentation
+- [Architecture](docs/Architecture.md)
