@@ -1,1 +1,283 @@
-<p>feeding-schedule works!</p>
+<section class="relative px-4 py-4 max-w-2xl mx-auto" style="padding-bottom: calc(7rem + env(safe-area-inset-bottom));">
+  @if (loading()) {
+    <div class="space-y-3" aria-busy="true">
+      <div class="h-20 rounded-2xl bg-slate-200 animate-pulse"></div>
+      <div class="h-20 rounded-2xl bg-slate-200 animate-pulse"></div>
+      <div class="h-20 rounded-2xl bg-slate-200 animate-pulse"></div>
+    </div>
+  } @else if (error(); as err) {
+    <div class="rounded-2xl bg-red-50 border border-red-200 p-4 text-red-800 flex items-start gap-3">
+      <span class="text-xl" aria-hidden="true">⚠</span>
+      <div class="flex-1 min-w-0">
+        <p class="font-medium">Fehler</p>
+        <p class="text-sm break-words">{{ err }}</p>
+      </div>
+      <button
+        type="button"
+        class="text-sm font-medium text-red-700 underline min-h-11 px-2"
+        (click)="load()"
+      >Erneut versuchen</button>
+    </div>
+  } @else if (schedules().length === 0) {
+    <div class="text-center py-12">
+      <p class="text-slate-500 mb-4">Noch keine Fütterungszeiten geplant.</p>
+      <button
+        type="button"
+        class="px-5 h-11 rounded-full bg-emerald-600 text-white font-medium active:scale-95 transition-transform"
+        (click)="openCreate()"
+      >Ersten Plan anlegen</button>
+    </div>
+  } @else {
+    <div class="flex justify-end mb-3">
+      <button
+        type="button"
+        class="text-sm font-medium text-emerald-700 min-h-11 px-3"
+        (click)="openCreate()"
+      >+ Neuer Plan</button>
+    </div>
+
+    <ul class="space-y-3" role="list">
+      @for (s of schedules(); track s.id) {
+        <li class="rounded-2xl bg-white shadow-sm border border-slate-200 p-4 flex items-center gap-3 min-h-16">
+          <div class="flex-1 min-w-0">
+            <p class="font-medium text-slate-900 truncate">{{ s.name }}</p>
+            <p class="text-sm text-slate-500">{{ s.time }} · {{ s.portion_g }} g</p>
+          </div>
+
+          <label class="inline-flex items-center cursor-pointer" [attr.aria-label]="'Aktivieren ' + s.name">
+            <input
+              type="checkbox"
+              class="sr-only peer"
+              [checked]="s.enabled"
+              (change)="toggleEnabled(s)"
+            />
+            <span class="w-11 h-6 bg-slate-200 peer-checked:bg-emerald-600 rounded-full relative transition-colors">
+              <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform peer-checked:translate-x-5"></span>
+            </span>
+          </label>
+
+          <button
+            type="button"
+            class="h-11 w-11 rounded-full text-slate-500 hover:bg-slate-100 active:bg-slate-200 flex items-center justify-center"
+            [attr.aria-label]="'Bearbeiten: ' + s.name"
+            (click)="openEdit(s)"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20" aria-hidden="true">
+              <path d="M3 17.25V21h3.75l11-11.04-3.75-3.75L3 17.25zm17.71-10.04a1 1 0 0 0 0-1.41l-2.5-2.5a1 1 0 0 0-1.42 0l-1.83 1.83 3.75 3.75 2-2.67z"/>
+            </svg>
+          </button>
+
+          <button
+            type="button"
+            class="h-11 w-11 rounded-full text-red-600 hover:bg-red-50 active:bg-red-100 flex items-center justify-center"
+            [attr.aria-label]="'Löschen: ' + s.name"
+            (click)="askDelete(s)"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20" aria-hidden="true">
+              <path d="M6 7h12v2H6V7zm2 3h8l-1 11H9L8 10zm3-7h2l1 2h4v2H4V5h4l1-2z"/>
+            </svg>
+          </button>
+        </li>
+      }
+    </ul>
+  }
+</section>
+
+@if (formOpen()) {
+  <div
+    class="fixed inset-0 z-30 bg-black/40 flex items-end sm:items-center justify-center"
+    (click)="closeForm()"
+  >
+    <form
+      class="relative w-full max-w-lg bg-white rounded-t-3xl sm:rounded-3xl p-6 space-y-4"
+      (click)="$event.stopPropagation()"
+      (submit)="save($event)"
+    >
+      <h2 class="text-lg font-semibold">
+        @if (editingId() === null) {
+          Neuer Fütterungsplan
+        } @else {
+          Fütterungsplan bearbeiten
+        }
+      </h2>
+
+      <label class="block">
+        <span class="text-sm font-medium text-slate-700">Name</span>
+        <input
+          type="text"
+          required
+          [value]="formName()"
+          (input)="formName.set(inputValue($event))"
+          class="mt-1 block w-full h-11 px-3 rounded-xl border border-slate-300 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-200 outline-none"
+          placeholder="z. B. Morgens"
+        />
+        <div class="flex flex-wrap gap-2 mt-2">
+          @for (suggestion of nameSuggestions; track suggestion) {
+            <button
+              type="button"
+              class="px-3 h-8 rounded-full bg-slate-100 text-sm text-slate-700 active:bg-slate-200"
+              (click)="formName.set(suggestion)"
+            >{{ suggestion }}</button>
+          }
+        </div>
+      </label>
+
+      <div class="grid grid-cols-2 gap-3">
+        <label class="block">
+          <span class="text-sm font-medium text-slate-700">Uhrzeit</span>
+          <input
+            type="time"
+            required
+            [value]="formTime()"
+            (input)="formTime.set(inputValue($event))"
+            class="mt-1 block w-full h-11 px-3 rounded-xl border border-slate-300 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-200 outline-none"
+          />
+        </label>
+        <label class="block">
+          <span class="text-sm font-medium text-slate-700">Portion (g)</span>
+          <input
+            type="number"
+            inputmode="decimal"
+            min="1"
+            step="1"
+            required
+            [value]="formPortion()"
+            (input)="formPortion.set(inputNumber($event))"
+            class="mt-1 block w-full h-11 px-3 rounded-xl border border-slate-300 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-200 outline-none"
+          />
+        </label>
+      </div>
+
+      <label class="flex items-center gap-3 cursor-pointer min-h-11">
+        <input
+          type="checkbox"
+          [checked]="formEnabled()"
+          (change)="formEnabled.set(isChecked($event))"
+          class="w-5 h-5 accent-emerald-600"
+        />
+        <span>Aktiv</span>
+      </label>
+
+      @if (formError(); as fe) {
+        <p class="text-sm text-red-600" role="alert">{{ fe }}</p>
+      }
+
+      <div class="flex gap-3 pt-2">
+        <button
+          type="button"
+          class="flex-1 h-11 rounded-full border border-slate-300 active:bg-slate-100"
+          [disabled]="formSaving()"
+          (click)="closeForm()"
+        >Abbrechen</button>
+        <button
+          type="submit"
+          class="flex-1 h-11 rounded-full bg-emerald-600 text-white font-medium active:scale-95 transition-transform disabled:opacity-50"
+          [disabled]="formSaving()"
+        >{{ formSaving() ? 'Speichern…' : 'Speichern' }}</button>
+      </div>
+    </form>
+  </div>
+}
+
+@if (deleteTarget(); as target) {
+  <div
+    class="fixed inset-0 z-30 bg-black/40 flex items-center justify-center p-4"
+    (click)="cancelDelete()"
+  >
+    <div
+      class="w-full max-w-sm bg-white rounded-2xl p-6"
+      (click)="$event.stopPropagation()"
+      role="alertdialog"
+      aria-modal="true"
+    >
+      <h2 class="text-lg font-semibold mb-2">Plan löschen?</h2>
+      <p class="text-slate-600 mb-6">
+        „{{ target.name }}" um {{ target.time }} wird dauerhaft gelöscht.
+      </p>
+      <div class="flex gap-3">
+        <button
+          type="button"
+          class="flex-1 h-11 rounded-full border border-slate-300 active:bg-slate-100"
+          [disabled]="deleteBusy()"
+          (click)="cancelDelete()"
+        >Abbrechen</button>
+        <button
+          type="button"
+          class="flex-1 h-11 rounded-full bg-red-600 text-white font-medium active:scale-95 transition-transform disabled:opacity-50"
+          [disabled]="deleteBusy()"
+          (click)="confirmDelete()"
+        >{{ deleteBusy() ? 'Löschen…' : 'Löschen' }}</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (triggerOpen()) {
+  <div
+    class="fixed inset-0 z-30 bg-black/40 flex items-end sm:items-center justify-center"
+    (click)="closeTrigger()"
+  >
+    <form
+      class="relative w-full max-w-lg bg-white rounded-t-3xl sm:rounded-3xl p-6 space-y-4"
+      (click)="$event.stopPropagation()"
+      (submit)="runTrigger($event)"
+    >
+      <h2 class="text-lg font-semibold">Jetzt füttern</h2>
+      <label class="block">
+        <span class="text-sm font-medium text-slate-700">Portion (g)</span>
+        <input
+          type="number"
+          inputmode="decimal"
+          min="1"
+          step="1"
+          required
+          autofocus
+          [value]="triggerPortion()"
+          (input)="triggerPortion.set(inputNumber($event))"
+          class="mt-1 block w-full h-11 px-3 rounded-xl border border-slate-300 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-200 outline-none text-2xl"
+        />
+      </label>
+
+      @if (triggerResult(); as tr) {
+        <p
+          class="text-sm"
+          [class.text-emerald-700]="tr.ok"
+          [class.text-red-600]="!tr.ok"
+          role="status"
+        >{{ tr.msg }}</p>
+      }
+
+      <div class="flex gap-3 pt-2">
+        <button
+          type="button"
+          class="flex-1 h-11 rounded-full border border-slate-300 active:bg-slate-100"
+          [disabled]="triggerBusy()"
+          (click)="closeTrigger()"
+        >Schließen</button>
+        <button
+          type="submit"
+          class="flex-1 h-11 rounded-full bg-emerald-600 text-white font-medium active:scale-95 transition-transform disabled:opacity-50"
+          [disabled]="triggerBusy()"
+        >{{ triggerBusy() ? 'Füttere…' : 'Füttern' }}</button>
+      </div>
+    </form>
+  </div>
+}
+
+@if (!formOpen() && !deleteTarget() && !triggerOpen()) {
+  <button
+    type="button"
+    aria-label="Jetzt füttern"
+    (click)="openTrigger()"
+    class="fixed right-4 z-20 h-14 w-14 rounded-full bg-emerald-600 text-white shadow-lg active:scale-95 transition-transform flex items-center justify-center"
+    style="bottom: calc(env(safe-area-inset-bottom) + 1rem);"
+  >
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="24" height="24" aria-hidden="true">
+      <path d="M12 2c-1.5 0-2.7 1-3 2.4-.3-.3-.7-.4-1-.4-1.1 0-2 .9-2 2 0 .4.1.7.3 1C4.7 7.6 4 9 4 10.5 4 13 7 16 12 16s8-3 8-5.5c0-1.5-.7-2.9-2.3-3.5.2-.3.3-.6.3-1 0-1.1-.9-2-2-2-.3 0-.7.1-1 .4C14.7 3 13.5 2 12 2z"/>
+      <circle cx="8" cy="11" r="1"/>
+      <circle cx="16" cy="11" r="1"/>
+      <circle cx="10" cy="13" r="1"/>
+      <circle cx="14" cy="13" r="1"/>
+    </svg>
+  </button>
+}
