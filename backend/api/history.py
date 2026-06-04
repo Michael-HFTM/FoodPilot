@@ -2,18 +2,21 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from datetime import datetime
+from typing import Literal
 
 from database import get_db
 from models.feeding import FeedingLog
 
 router = APIRouter()
 
+SizeLiteral = Literal["small", "medium", "large"]
+
 
 class LogOut(BaseModel):
     id:           int
     schedule_id:  int | None
     triggered_at: datetime
-    portion_g:    float
+    size:         SizeLiteral
     success:      bool
     note:         str | None
 

@@ -1,5 +1,11 @@
 import { Component, inject, signal } from '@angular/core';
-import { Feeding, FeedingSchedule as Schedule, ManualTriggerResult, ScheduleCreate } from '../../services/feeding';
+import { Feeding, FeedingSchedule as Schedule, ManualTriggerResult, ScheduleCreate, Size, SIZES } from '../../services/feeding';
+
+const SIZE_LABELS: Record<Size, string> = {
+  small: 'Klein',
+  medium: 'Mittel',
+  large: 'Groß',
+};
 
 @Component({
   selector: 'app-feeding-schedule',
@@ -11,6 +17,8 @@ export class FeedingSchedule {
   private readonly feeding = inject(Feeding);
 
   readonly nameSuggestions = ['Morgens', 'Mittags', 'Abends', 'Spät'];
+  readonly sizes = SIZES;
+  readonly sizeLabel = (s: Size): string => SIZE_LABELS[s];
 
   readonly schedules = signal<Schedule[]>([]);
   readonly loading = signal(true);
@@ -20,7 +28,7 @@ export class FeedingSchedule {
   readonly editingId = signal<number | null>(null);
   readonly formName = signal('');
   readonly formTime = signal('08:00');
-  readonly formPortion = signal(50);
+  readonly formSize = signal<Size>('medium');
   readonly formEnabled = signal(true);
   readonly formError = signal<string | null>(null);
   readonly formSaving = signal(false);
@@ -29,7 +37,7 @@ export class FeedingSchedule {
   readonly deleteBusy = signal(false);
 
   readonly triggerOpen = signal(false);
-  readonly triggerPortion = signal(50);
+  readonly triggerSize = signal<Size>('medium');
   readonly triggerBusy = signal(false);
   readonly triggerResult = signal<{ ok: boolean; msg: string } | null>(null);
 
@@ -56,7 +64,7 @@ export class FeedingSchedule {
     this.editingId.set(null);
     this.formName.set('');
     this.formTime.set('08:00');
-    this.formPortion.set(50);
+    this.formSize.set('medium');
     this.formEnabled.set(true);
     this.formError.set(null);
     this.formOpen.set(true);
@@ -66,7 +74,7 @@ export class FeedingSchedule {
     this.editingId.set(s.id);
     this.formName.set(s.name);
     this.formTime.set(s.time);
-    this.formPortion.set(s.portion_g);
+    this.formSize.set(s.size);
     this.formEnabled.set(s.enabled);
     this.formError.set(null);
     this.formOpen.set(true);
@@ -81,7 +89,7 @@ export class FeedingSchedule {
     ev.preventDefault();
     const name = this.formName().trim();
     const time = this.formTime();
-    const portion = this.formPortion();
+    const size = this.formSize();
 
     if (!name) {
       this.formError.set('Name ist erforderlich.');
@@ -91,15 +99,15 @@ export class FeedingSchedule {
       this.formError.set('Uhrzeit muss im Format HH:MM sein.');
       return;
     }
-    if (!(portion > 0)) {
-      this.formError.set('Portion muss größer als 0 sein.');
+    if (!SIZES.includes(size)) {
+      this.formError.set('Ungültige Portionsgröße.');
       return;
     }
 
     const payload: ScheduleCreate = {
       name,
       time,
-      portion_g: portion,
+      size,
       enabled: this.formEnabled(),
     };
 
@@ -160,7 +168,7 @@ export class FeedingSchedule {
       .update(s.id, {
         name: s.name,
         time: s.time,
-        portion_g: s.portion_g,
+        size: s.size,
         enabled: newEnabled,
       })
       .subscribe({
@@ -179,7 +187,7 @@ export class FeedingSchedule {
   }
 
   openTrigger(): void {
-    this.triggerPortion.set(50);
+    this.triggerSize.set('medium');
     this.triggerResult.set(null);
     this.triggerOpen.set(true);
   }
@@ -191,20 +199,16 @@ export class FeedingSchedule {
 
   runTrigger(ev: Event): void {
     ev.preventDefault();
-    const portion = this.triggerPortion();
-    if (!(portion > 0)) {
-      this.triggerResult.set({ ok: false, msg: 'Portion muss größer als 0 sein.' });
-      return;
-    }
+    const size = this.triggerSize();
     this.triggerBusy.set(true);
     this.triggerResult.set(null);
-    this.feeding.trigger(portion).subscribe({
+    this.feeding.trigger(size).subscribe({
       next: (res: ManualTriggerResult) => {
         this.triggerBusy.set(false);
         this.triggerResult.set({
           ok: res.success,
           msg: res.success
-            ? `${res.portion_g} g ausgegeben.`
+            ? `${SIZE_LABELS[res.size]} ausgegeben.`
             : 'Fütterung fehlgeschlagen. Hardware prüfen.',
         });
       },
@@ -217,10 +221,6 @@ export class FeedingSchedule {
 
   protected inputValue(ev: Event): string {
     return (ev.target as HTMLInputElement).value;
-  }
-
-  protected inputNumber(ev: Event): number {
-    return (ev.target as HTMLInputElement).valueAsNumber || 0;
   }
 
   protected isChecked(ev: Event): boolean {

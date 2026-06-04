@@ -1,22 +1,25 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from datetime import datetime
+from typing import Literal
 
 from database import get_db
-from models.feeding import FeedingSchedule, FeedingLog
+from models.feeding import FeedingSchedule, FeedingLog, Size
 from hardware.dispenser import trigger_feeding
 
 router = APIRouter()
+
+SizeLiteral = Literal["small", "medium", "large"]
 
 
 # --- Schemas ---
 
 class ScheduleCreate(BaseModel):
-    name:      str
-    time:      str    # "HH:MM"
-    portion_g: float
-    enabled:   bool = True
+    name:    str
+    time:    str                  # "HH:MM"
+    size:    SizeLiteral
+    enabled: bool = True
 
 
 class ScheduleOut(ScheduleCreate):
@@ -25,6 +28,11 @@ class ScheduleOut(ScheduleCreate):
 
     class Config:
         from_attributes = True
+
+
+class TriggerResult(BaseModel):
+    success: bool
+    size:    SizeLiteral
 
 
 # --- Endpoints ---
@@ -64,16 +72,19 @@ def delete_schedule(schedule_id: int, db: Session = Depends(get_db)):
     db.commit()
 
 
-@router.post("/trigger", status_code=200)
-def manual_trigger(portion_g: float = 50.0, db: Session = Depends(get_db)):
-    """Manually trigger a feeding."""
-    success = trigger_feeding(portion_g)
+@router.post("/trigger", response_model=TriggerResult, status_code=200)
+def manual_trigger(
+    size: SizeLiteral = Query("medium"),
+    db: Session = Depends(get_db),
+):
+    """Manually trigger a feeding of the given size."""
+    success = trigger_feeding(Size(size))
     log = FeedingLog(
         schedule_id=None,
-        portion_g=portion_g,
+        size=size,
         success=success,
         note=None if success else "Manual trigger failed",
     )
     db.add(log)
     db.commit()
-    return {"success": success, "portion_g": portion_g}
+    return TriggerResult(success=success, size=size)

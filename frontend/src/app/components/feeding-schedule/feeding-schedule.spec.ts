@@ -5,8 +5,8 @@ import { FeedingSchedule } from './feeding-schedule';
 import { FeedingSchedule as Schedule } from '../../services/feeding';
 
 const MOCK_SCHEDULES: Schedule[] = [
-  { id: 1, name: 'Morgens', time: '07:30', portion_g: 40, enabled: true, created_at: '2026-06-01T00:00:00' },
-  { id: 2, name: 'Abends', time: '18:00', portion_g: 50, enabled: false, created_at: '2026-06-01T00:00:00' },
+  { id: 1, name: 'Morgens', time: '07:30', size: 'medium', enabled: true, created_at: '2026-06-01T00:00:00' },
+  { id: 2, name: 'Abends', time: '18:00', size: 'small', enabled: false, created_at: '2026-06-01T00:00:00' },
 ];
 
 describe('FeedingSchedule', () => {
@@ -58,7 +58,7 @@ describe('FeedingSchedule', () => {
     expect(html.querySelector('button[aria-label="Jetzt füttern"]')).toBeTruthy();
   });
 
-  it('should render the list of schedules', () => {
+  it('should render the list of schedules with size labels', () => {
     fixture = TestBed.createComponent(FeedingSchedule);
     component = fixture.componentInstance;
     flushList(MOCK_SCHEDULES);
@@ -66,8 +66,9 @@ describe('FeedingSchedule', () => {
     const html = fixture.nativeElement as HTMLElement;
     expect(html.textContent).toContain('Morgens');
     expect(html.textContent).toContain('07:30');
-    expect(html.textContent).toContain('40 g');
+    expect(html.textContent).toContain('Mittel');
     expect(html.textContent).toContain('Abends');
+    expect(html.textContent).toContain('Klein');
   });
 
   it('should open the create form when "+ Neuer Plan" is clicked', () => {
@@ -83,5 +84,23 @@ describe('FeedingSchedule', () => {
     fixture.detectChanges();
     expect(component.formOpen()).toBe(true);
     expect(component.editingId()).toBeNull();
+  });
+
+  it('should default the form size to medium', () => {
+    fixture = TestBed.createComponent(FeedingSchedule);
+    component = fixture.componentInstance;
+    flushList();
+    fixture.detectChanges();
+    component.openCreate();
+    expect(component.formSize()).toBe('medium');
+  });
+
+  it('should reflect the schedule size when editing', () => {
+    fixture = TestBed.createComponent(FeedingSchedule);
+    component = fixture.componentInstance;
+    flushList(MOCK_SCHEDULES);
+    fixture.detectChanges();
+    component.openEdit(MOCK_SCHEDULES[1]);
+    expect(component.formSize()).toBe('small');
   });
 });
