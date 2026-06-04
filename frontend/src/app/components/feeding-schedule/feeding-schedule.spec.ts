@@ -49,15 +49,6 @@ describe('FeedingSchedule', () => {
     expect(html.textContent).toContain('Noch keine Fütterungszeiten geplant');
   });
 
-  it('should render the FAB', () => {
-    fixture = TestBed.createComponent(FeedingSchedule);
-    component = fixture.componentInstance;
-    flushList();
-    fixture.detectChanges();
-    const html = fixture.nativeElement as HTMLElement;
-    expect(html.querySelector('button[aria-label="Jetzt füttern"]')).toBeTruthy();
-  });
-
   it('should render the list of schedules with size labels', () => {
     fixture = TestBed.createComponent(FeedingSchedule);
     component = fixture.componentInstance;

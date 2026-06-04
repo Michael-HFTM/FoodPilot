@@ -1,0 +1,38 @@
+<nav
+  class="sticky bottom-0 z-20 grid grid-cols-3 bg-white/95 backdrop-blur border-t border-slate-200"
+  style="padding-bottom: env(safe-area-inset-bottom);"
+>
+  @for (tab of tabs; track tab.path) {
+    <a
+      [routerLink]="tab.path"
+      routerLinkActive="text-emerald-600"
+      [routerLinkActiveOptions]="{ exact: tab.path === '/' }"
+      ariaCurrentWhenActive="page"
+      class="flex flex-col items-center justify-center min-h-16 gap-1 text-slate-500 active:bg-slate-100 transition-colors"
+    >
+      @switch (tab.path) {
+        @case ('/') {
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="22" height="22" aria-hidden="true">
+            <circle cx="12" cy="12" r="9"/>
+            <path d="M12 7v5l3 2"/>
+          </svg>
+        }
+        @case ('/status') {
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="22" height="22" aria-hidden="true">
+            <path d="M12 3c-3.5 4-6 6.8-6 10a6 6 0 0 0 12 0c0-3.2-2.5-6-6-10z"/>
+            <path d="M9 14a3 3 0 0 0 3 3"/>
+          </svg>
+        }
+        @case ('/verlauf') {
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="22" height="22" aria-hidden="true">
+            <path d="M4 6h12"/>
+            <path d="M4 12h12"/>
+            <path d="M4 18h8"/>
+            <circle cx="18" cy="18" r="2.2"/>
+          </svg>
+        }
+      }
+      <span class="text-xs font-medium">{{ tab.label }}</span>
+    </a>
+  }
+</nav>
