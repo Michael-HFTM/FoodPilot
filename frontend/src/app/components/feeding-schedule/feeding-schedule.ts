@@ -1,10 +1,10 @@
 import { Component, inject, signal } from '@angular/core';
-import { Feeding, FeedingSchedule as Schedule, ManualTriggerResult, ScheduleCreate, Size, SIZES } from '../../services/feeding';
+import { Feeding, FeedingSchedule as Schedule, ScheduleCreate, Size, SIZES } from '../../services/feeding';
 
 const SIZE_LABELS: Record<Size, string> = {
   small: 'Klein',
   medium: 'Mittel',
-  large: 'Groß',
+  large: 'Gross',
 };
 
 @Component({
@@ -35,11 +35,6 @@ export class FeedingSchedule {
 
   readonly deleteTarget = signal<Schedule | null>(null);
   readonly deleteBusy = signal(false);
-
-  readonly triggerOpen = signal(false);
-  readonly triggerSize = signal<Size>('medium');
-  readonly triggerBusy = signal(false);
-  readonly triggerResult = signal<{ ok: boolean; msg: string } | null>(null);
 
   constructor() {
     this.load();
@@ -100,7 +95,7 @@ export class FeedingSchedule {
       return;
     }
     if (!SIZES.includes(size)) {
-      this.formError.set('Ungültige Portionsgröße.');
+      this.formError.set('Ungültige Portionsgrösse.');
       return;
     }
 
@@ -184,39 +179,6 @@ export class FeedingSchedule {
           this.error.set(err.message);
         },
       });
-  }
-
-  openTrigger(): void {
-    this.triggerSize.set('medium');
-    this.triggerResult.set(null);
-    this.triggerOpen.set(true);
-  }
-
-  closeTrigger(): void {
-    if (this.triggerBusy()) return;
-    this.triggerOpen.set(false);
-  }
-
-  runTrigger(ev: Event): void {
-    ev.preventDefault();
-    const size = this.triggerSize();
-    this.triggerBusy.set(true);
-    this.triggerResult.set(null);
-    this.feeding.trigger(size).subscribe({
-      next: (res: ManualTriggerResult) => {
-        this.triggerBusy.set(false);
-        this.triggerResult.set({
-          ok: res.success,
-          msg: res.success
-            ? `${SIZE_LABELS[res.size]} ausgegeben.`
-            : 'Fütterung fehlgeschlagen. Hardware prüfen.',
-        });
-      },
-      error: (err: Error) => {
-        this.triggerBusy.set(false);
-        this.triggerResult.set({ ok: false, msg: err.message });
-      },
-    });
   }
 
   protected inputValue(ev: Event): string {
