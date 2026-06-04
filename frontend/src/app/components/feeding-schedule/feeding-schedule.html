@@ -41,7 +41,7 @@
         <li class="rounded-2xl bg-white shadow-sm border border-slate-200 p-4 flex items-center gap-3 min-h-16">
           <div class="flex-1 min-w-0">
             <p class="font-medium text-slate-900 truncate">{{ s.name }}</p>
-            <p class="text-sm text-slate-500">{{ s.time }} · {{ s.portion_g }} g</p>
+            <p class="text-sm text-slate-500">{{ s.time }} · {{ sizeLabel(s.size) }}</p>
           </div>
 
           <label class="relative inline-flex items-center cursor-pointer" [attr.aria-label]="'Aktivieren ' + s.name">
@@ -122,30 +122,36 @@
         </div>
       </label>
 
-      <div class="grid grid-cols-2 gap-3">
-        <label class="block">
-          <span class="text-sm font-medium text-slate-700">Uhrzeit</span>
-          <input
-            type="time"
-            required
-            [value]="formTime()"
-            (input)="formTime.set(inputValue($event))"
-            class="mt-1 block w-full h-11 px-3 rounded-xl border border-slate-300 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-200 outline-none"
-          />
-        </label>
-        <label class="block">
-          <span class="text-sm font-medium text-slate-700">Portion (g)</span>
-          <input
-            type="number"
-            inputmode="decimal"
-            min="1"
-            step="1"
-            required
-            [value]="formPortion()"
-            (input)="formPortion.set(inputNumber($event))"
-            class="mt-1 block w-full h-11 px-3 rounded-xl border border-slate-300 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-200 outline-none"
-          />
-        </label>
+      <label class="block">
+        <span class="text-sm font-medium text-slate-700">Uhrzeit</span>
+        <input
+          type="time"
+          required
+          [value]="formTime()"
+          (input)="formTime.set(inputValue($event))"
+          class="mt-1 block w-full h-11 px-3 rounded-xl border border-slate-300 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-200 outline-none"
+        />
+      </label>
+
+      <div class="block">
+        <span class="text-sm font-medium text-slate-700">Portionsgröße</span>
+        <div class="mt-1 grid grid-cols-3 gap-2" role="radiogroup" aria-label="Portionsgröße">
+          @for (s of sizes; track s) {
+            <button
+              type="button"
+              role="radio"
+              [attr.aria-checked]="formSize() === s"
+              [class.bg-emerald-600]="formSize() === s"
+              [class.text-white]="formSize() === s"
+              [class.border-emerald-600]="formSize() === s"
+              [class.bg-white]="formSize() !== s"
+              [class.text-slate-700]="formSize() !== s"
+              [class.border-slate-300]="formSize() !== s"
+              class="h-11 rounded-xl border-2 font-medium active:scale-95 transition-transform"
+              (click)="formSize.set(s)"
+            >{{ sizeLabel(s) }}</button>
+          }
+        </div>
       </div>
 
       <label class="flex items-center gap-3 cursor-pointer min-h-11">
@@ -223,20 +229,26 @@
       (submit)="runTrigger($event)"
     >
       <h2 class="text-lg font-semibold">Jetzt füttern</h2>
-      <label class="block">
-        <span class="text-sm font-medium text-slate-700">Portion (g)</span>
-        <input
-          type="number"
-          inputmode="decimal"
-          min="1"
-          step="1"
-          required
-          autofocus
-          [value]="triggerPortion()"
-          (input)="triggerPortion.set(inputNumber($event))"
-          class="mt-1 block w-full h-11 px-3 rounded-xl border border-slate-300 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-200 outline-none text-2xl"
-        />
-      </label>
+      <div class="block">
+        <span class="text-sm font-medium text-slate-700">Portionsgröße</span>
+        <div class="mt-1 grid grid-cols-3 gap-2" role="radiogroup" aria-label="Portionsgröße">
+          @for (s of sizes; track s) {
+            <button
+              type="button"
+              role="radio"
+              [attr.aria-checked]="triggerSize() === s"
+              [class.bg-emerald-600]="triggerSize() === s"
+              [class.text-white]="triggerSize() === s"
+              [class.border-emerald-600]="triggerSize() === s"
+              [class.bg-white]="triggerSize() !== s"
+              [class.text-slate-700]="triggerSize() !== s"
+              [class.border-slate-300]="triggerSize() !== s"
+              class="h-11 rounded-xl border-2 font-medium active:scale-95 transition-transform"
+              (click)="triggerSize.set(s)"
+            >{{ sizeLabel(s) }}</button>
+          }
+        </div>
+      </div>
 
       @if (triggerResult(); as tr) {
         <p

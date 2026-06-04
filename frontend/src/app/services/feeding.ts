@@ -3,11 +3,15 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
+export type Size = 'small' | 'medium' | 'large';
+
+export const SIZES: readonly Size[] = ['small', 'medium', 'large'] as const;
+
 export interface FeedingSchedule {
   readonly id: number;
   readonly name: string;
   readonly time: string;
-  readonly portion_g: number;
+  readonly size: Size;
   readonly enabled: boolean;
   readonly created_at: string;
 }
@@ -16,7 +20,7 @@ export type ScheduleCreate = Omit<FeedingSchedule, 'id' | 'created_at'>;
 
 export interface ManualTriggerResult {
   readonly success: boolean;
-  readonly portion_g: number;
+  readonly size: Size;
 }
 
 @Service()
@@ -48,10 +52,10 @@ export class Feeding {
     );
   }
 
-  trigger(portion_g: number): Observable<ManualTriggerResult> {
+  trigger(size: Size): Observable<ManualTriggerResult> {
     return this.http
       .post<ManualTriggerResult>(`${this.baseUrl}/trigger`, null, {
-        params: { portion_g },
+        params: { size },
       })
       .pipe(catchError((err) => throwError(() => this.toMessage(err, 'Manuelle Fütterung fehlgeschlagen'))));
   }

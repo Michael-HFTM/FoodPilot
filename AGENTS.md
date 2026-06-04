@@ -63,7 +63,7 @@ frontend/              # Angular 22 standalone app
 | POST | `/api/feeding/` | create schedule |
 | PUT | `/api/feeding/{id}` | update schedule |
 | DELETE | `/api/feeding/{id}` | delete schedule |
-| POST | `/api/feeding/trigger` | manual feed |
+| POST | `/api/feeding/trigger?size=medium` | manual feed (`size`: small \| medium \| large) |
 | GET | `/api/status/` | system status (fill level, blocked) |
 | GET | `/api/history/` | feeding log (default limit 50, max 500) |
 | GET | `/` | root (JSON or Angular SPA if `backend/static/` exists) |

@@ -1,6 +1,15 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, Boolean
+from enum import Enum
+
+from sqlalchemy import Column, Integer, String, DateTime, Boolean
 from datetime import datetime
+
 from models.base import Base
+
+
+class Size(str, Enum):
+    SMALL = "small"
+    MEDIUM = "medium"
+    LARGE = "large"
 
 
 class FeedingSchedule(Base):
@@ -9,7 +18,7 @@ class FeedingSchedule(Base):
     id         = Column(Integer, primary_key=True, index=True)
     name       = Column(String, nullable=False)          # e.g. "Morning"
     time       = Column(String, nullable=False)          # "HH:MM"
-    portion_g  = Column(Float,  nullable=False)          # grams
+    size       = Column(String, nullable=False)          # Size: small | medium | large
     enabled    = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
@@ -20,6 +29,6 @@ class FeedingLog(Base):
     id           = Column(Integer, primary_key=True, index=True)
     schedule_id  = Column(Integer, nullable=True)        # None = manual trigger
     triggered_at = Column(DateTime, default=datetime.utcnow)
-    portion_g    = Column(Float,  nullable=False)
+    size         = Column(String, nullable=False)        # Size at the time of dispense
     success      = Column(Boolean, nullable=False)
     note         = Column(String, nullable=True)         # error message if failed

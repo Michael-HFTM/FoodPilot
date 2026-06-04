@@ -72,8 +72,8 @@ backed by a REST API and hardware control layer.
 - Managed via SQLAlchemy ORM
 
 **Planned tables:**
-- `feeding_schedule` – scheduled feeding times and portions
-- `feeding_log` – history of executed feedings
+- `feeding_schedule` – scheduled feeding times and size (`small` | `medium` | `large`)
+- `feeding_log` – history of executed feedings (records the size dispensed)
 - `system_status` – current sensor readings and error states
 
 ## Project Structure
