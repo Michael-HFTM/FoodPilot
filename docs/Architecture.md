@@ -102,18 +102,20 @@ foodpilot/
 │   │       ├── status/      # Live status feature
 │   │       └── history/     # Feeding history feature
 │   └── dist/                # Built output (deployed to Pi)
-├── deploy.sh                # Build frontend + rsync to Pi + restart service
+├── deploy.ps1               # PowerShell: build frontend + scp to Pi + restart service
 ├── ARCHITECTURE.md
 └── README.md
 ```
 
 ## Deployment
 
-Development happens locally. Deployment to the Pi is done via `deploy.sh`:
+Development happens locally. Deployment to the Pi is done via `deploy.ps1`
+(see `docs/Deployment.md`):
 
-1. `ng build` – builds the Angular app to `frontend/dist/`
-2. `rsync` – copies backend + frontend build to the Pi
-3. `systemctl restart foodpilot` – restarts the FastAPI service
+1. `npm run build` – builds the Angular app to `backend/static/`
+2. `scp` – copies a staged copy of the backend (venv and DB excluded) to the Pi
+3. `pip install` – installs requirements into `~/foodpilot/backend/.venv`
+4. `systemctl restart foodpilot` – restarts the FastAPI service
 
 The Pi is reachable via SSH in the local network:
 ```bash
