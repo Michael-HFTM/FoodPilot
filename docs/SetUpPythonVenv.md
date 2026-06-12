@@ -9,7 +9,7 @@ python -m venv .venv
 .venv\Scripts\Activate.ps1
 
 # install python dependencies
-pip install -r requirements.txt
+pip install -r backend\requirements.txt
 
 # leave the virtual environment
 deactivate
