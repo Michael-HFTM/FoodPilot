@@ -48,6 +48,9 @@ export class FeedNowFab {
             ? `${SIZE_LABELS[res.size]} ausgegeben.`
             : 'Fütterung fehlgeschlagen. Hardware prüfen.',
         });
+        if (res.success) {
+          this.overlay.lastFeedAt.set(Date.now());
+        }
       },
       error: (err: Error) => {
         this.busy.set(false);
