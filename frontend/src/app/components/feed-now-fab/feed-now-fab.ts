@@ -1,5 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { Feeding, ManualTriggerResult, Size, SIZES } from '../../services/feeding';
+import { Overlay } from '../../services/overlay';
 
 const SIZE_LABELS: Record<Size, string> = {
   small: 'Klein',
@@ -13,6 +14,7 @@ const SIZE_LABELS: Record<Size, string> = {
 })
 export class FeedNowFab {
   private readonly feeding = inject(Feeding);
+  readonly overlay = inject(Overlay);
 
   readonly sizes = SIZES;
   readonly sizeLabel = (s: Size): string => SIZE_LABELS[s];
