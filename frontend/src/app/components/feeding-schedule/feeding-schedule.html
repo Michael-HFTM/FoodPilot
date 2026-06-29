@@ -112,12 +112,12 @@
           placeholder="z. B. Morgens"
         />
         <div class="flex flex-wrap gap-2 mt-2">
-          @for (suggestion of nameSuggestions; track suggestion) {
+          @for (suggestion of nameSuggestions; track suggestion.name) {
             <button
               type="button"
               class="px-3 h-8 rounded-full bg-slate-100 text-sm text-slate-700 active:bg-slate-200"
-              (click)="formName.set(suggestion)"
-            >{{ suggestion }}</button>
+              (click)="formName.set(suggestion.name); formTime.set(suggestion.time)"
+            >{{ suggestion.name }}</button>
           }
         </div>
       </label>
