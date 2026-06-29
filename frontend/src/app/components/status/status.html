@@ -1,0 +1,90 @@
+<section class="relative px-4 py-4 max-w-2xl mx-auto" style="padding-bottom: calc(8rem + env(safe-area-inset-bottom));">
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="text-lg font-semibold text-slate-900">Status</h2>
+    <button
+      type="button"
+      class="text-sm font-medium text-emerald-700 min-h-11 px-3 disabled:opacity-40"
+      [disabled]="loading()"
+      (click)="load()"
+    >Aktualisieren</button>
+  </div>
+
+  @if (loading() && !data()) {
+    <div class="space-y-3" aria-busy="true">
+      <div class="h-24 rounded-2xl bg-slate-200 animate-pulse"></div>
+      <div class="h-24 rounded-2xl bg-slate-200 animate-pulse"></div>
+    </div>
+  } @else if (error(); as err) {
+    <div class="rounded-2xl bg-red-50 border border-red-200 p-4 text-red-800 flex items-start gap-3">
+      <span class="text-xl" aria-hidden="true">⚠</span>
+      <div class="flex-1 min-w-0">
+        <p class="font-medium">Fehler</p>
+        <p class="text-sm break-words">{{ err }}</p>
+      </div>
+      <button
+        type="button"
+        class="text-sm font-medium text-red-700 underline min-h-11 px-2"
+        (click)="load()"
+      >Erneut versuchen</button>
+    </div>
+  } @else if (data(); as d) {
+    <div class="space-y-3">
+
+      <!-- Heutige Portionen -->
+      <div class="rounded-2xl bg-white shadow-sm border border-slate-200 p-5">
+        <p class="text-sm font-medium text-slate-500 mb-1">Heute ausgegeben</p>
+        <p class="text-4xl font-bold text-slate-900">
+          {{ todayCount() !== null ? todayCount() : '–' }}
+          <span class="text-lg font-normal text-slate-400">Portion{{ todayCount() !== 1 ? 'en' : '' }}</span>
+        </p>
+        @if (todaySizes(); as sizes) {
+          <div class="flex gap-3 mt-3">
+            <span class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-medium">{{ sizes.small }}× Klein</span>
+            <span class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-medium">{{ sizes.medium }}× Mittel</span>
+            <span class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-medium">{{ sizes.large }}× Gross</span>
+          </div>
+        }
+      </div>
+
+      <!-- Füllstand -->
+      <div class="rounded-2xl bg-white shadow-sm border border-slate-200 p-5">
+        <p class="text-sm font-medium text-slate-500 mb-3">Füllstand</p>
+        @if (fillPercent() !== null) {
+          <div class="flex items-center gap-4">
+            <div class="flex-1 h-4 rounded-full bg-slate-100 overflow-hidden">
+              <div
+                class="h-full rounded-full transition-all duration-500"
+                [class]="fillColor()"
+                [style.width.%]="fillPercent()"
+              ></div>
+            </div>
+            <span class="text-2xl font-semibold text-slate-900 w-16 text-right">{{ fillPercent() }}&nbsp;%</span>
+          </div>
+        } @else {
+          <p class="text-slate-400 text-sm">Sensor nicht verfügbar</p>
+        }
+      </div>
+
+      <!-- Dispenser-Status -->
+      <div class="rounded-2xl bg-white shadow-sm border border-slate-200 p-5">
+        <p class="text-sm font-medium text-slate-500 mb-3">Dispenser</p>
+        @if (d.is_blocked) {
+          <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-100 text-red-700 font-medium text-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16" aria-hidden="true">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+            </svg>
+            Blockiert
+          </div>
+        } @else {
+          <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-100 text-emerald-700 font-medium text-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16" aria-hidden="true">
+              <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+            </svg>
+            OK
+          </div>
+        }
+      </div>
+
+    </div>
+  }
+</section>
