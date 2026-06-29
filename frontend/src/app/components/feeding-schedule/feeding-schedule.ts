@@ -25,7 +25,12 @@ export class FeedingSchedule {
     this.load();
   }
 
-  readonly nameSuggestions = ['Morgens', 'Mittags', 'Abends', 'Spät'];
+  readonly nameSuggestions = [
+    { name: 'Morgens', time: '07:00' },
+    { name: 'Mittags', time: '12:00' },
+    { name: 'Abends',  time: '18:00' },
+    { name: 'Spät',   time: '22:00' },
+  ];
   readonly sizes = SIZES;
   readonly sizeLabel = (s: Size): string => SIZE_LABELS[s];
 
@@ -63,7 +68,7 @@ export class FeedingSchedule {
   openCreate(): void {
     this.editingId.set(null);
     this.formName.set('');
-    this.formTime.set('08:00');
+    this.formTime.set('00:00');
     this.formSize.set('medium');
     this.formEnabled.set(true);
     this.formError.set(null);
