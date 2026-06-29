@@ -4,4 +4,5 @@ import { Service } from '@angular/core';
 @Service()
 export class Overlay {
   readonly anyOpen = signal(false);
+  readonly lastFeedAt = signal(0);
 }
