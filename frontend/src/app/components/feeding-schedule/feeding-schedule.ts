@@ -1,5 +1,6 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, effect, inject, signal } from '@angular/core';
 import { Feeding, FeedingSchedule as Schedule, ScheduleCreate, Size, SIZES } from '../../services/feeding';
+import { Overlay } from '../../services/overlay';
 
 const SIZE_LABELS: Record<Size, string> = {
   small: 'Klein',
@@ -15,6 +16,14 @@ const SIZE_LABELS: Record<Size, string> = {
 })
 export class FeedingSchedule {
   private readonly feeding = inject(Feeding);
+  private readonly overlay = inject(Overlay);
+
+  constructor() {
+    effect(() => {
+      this.overlay.anyOpen.set(this.formOpen() || this.deleteTarget() !== null);
+    });
+    this.load();
+  }
 
   readonly nameSuggestions = ['Morgens', 'Mittags', 'Abends', 'Spät'];
   readonly sizes = SIZES;
@@ -35,10 +44,6 @@ export class FeedingSchedule {
 
   readonly deleteTarget = signal<Schedule | null>(null);
   readonly deleteBusy = signal(false);
-
-  constructor() {
-    this.load();
-  }
 
   load(): void {
     this.loading.set(true);
