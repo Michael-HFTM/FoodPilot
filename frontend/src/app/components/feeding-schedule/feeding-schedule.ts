@@ -50,7 +50,7 @@ export class FeedingSchedule {
     this.error.set(null);
     this.feeding.list().subscribe({
       next: (data) => {
-        this.schedules.set(data);
+        this.schedules.set([...data].sort((a, b) => a.time.localeCompare(b.time)));
         this.loading.set(false);
       },
       error: (err: Error) => {
