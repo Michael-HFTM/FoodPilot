@@ -11,10 +11,10 @@ const SIZE_LABELS: Record<Size, string> = {
 };
 
 @Component({
-  selector: 'app-history-placeholder',
-  templateUrl: './history-placeholder.html',
+  selector: 'app-history',
+  templateUrl: './history.html',
 })
-export class HistoryPlaceholder {
+export class History {
   private readonly historyService = inject(HistoryService);
   private readonly overlay = inject(Overlay);
 

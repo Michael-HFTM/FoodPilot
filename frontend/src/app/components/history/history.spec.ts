@@ -2,11 +2,11 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
 
-import { HistoryPlaceholder } from './history-placeholder';
+import { History } from './history';
 import { FeedingLog } from '../../services/history';
 
-describe('HistoryPlaceholder', () => {
-  let fixture: ComponentFixture<HistoryPlaceholder>;
+describe('History', () => {
+  let fixture: ComponentFixture<History>;
   let http: HttpTestingController;
 
   beforeEach(() => {
@@ -14,7 +14,7 @@ describe('HistoryPlaceholder', () => {
       providers: [provideHttpClient(), provideHttpClientTesting()],
     });
     http = TestBed.inject(HttpTestingController);
-    fixture = TestBed.createComponent(HistoryPlaceholder);
+    fixture = TestBed.createComponent(History);
   });
 
   afterEach(() => http.verify());

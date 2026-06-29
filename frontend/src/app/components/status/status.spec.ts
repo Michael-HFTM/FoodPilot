@@ -1,9 +1,9 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { StatusPlaceholder } from './status-placeholder';
+import { TestBed } from '@angular/core/testing';
+import { Status } from './status';
 
-describe('StatusPlaceholder', () => {
+describe('Status', () => {
   it('should render the Status heading', () => {
-    const fixture = TestBed.createComponent(StatusPlaceholder);
+    const fixture = TestBed.createComponent(Status);
     fixture.detectChanges();
     const html = fixture.nativeElement as HTMLElement;
     expect(html.textContent).toContain('Status');
