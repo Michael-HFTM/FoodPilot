@@ -20,7 +20,7 @@ class FeedingSchedule(Base):
     time       = Column(String, nullable=False)          # "HH:MM"
     size       = Column(String, nullable=False)          # Size: small | medium | large
     enabled    = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.now)
 
 
 class FeedingLog(Base):
@@ -28,7 +28,7 @@ class FeedingLog(Base):
 
     id           = Column(Integer, primary_key=True, index=True)
     schedule_id  = Column(Integer, nullable=True)        # None = manual trigger
-    triggered_at = Column(DateTime, default=datetime.utcnow)
+    triggered_at = Column(DateTime, default=datetime.now)
     size         = Column(String, nullable=False)        # Size at the time of dispense
     success      = Column(Boolean, nullable=False)
     note         = Column(String, nullable=True)         # error message if failed

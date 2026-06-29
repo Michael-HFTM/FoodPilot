@@ -7,6 +7,7 @@ from typing import Literal
 from database import get_db
 from models.feeding import FeedingSchedule, FeedingLog, Size
 from hardware.dispenser import trigger_feeding
+from scheduler import reload_scheduler
 
 router = APIRouter()
 
@@ -48,6 +49,7 @@ def create_schedule(payload: ScheduleCreate, db: Session = Depends(get_db)):
     db.add(schedule)
     db.commit()
     db.refresh(schedule)
+    reload_scheduler()
     return schedule
 
 
@@ -60,6 +62,7 @@ def update_schedule(schedule_id: int, payload: ScheduleCreate, db: Session = Dep
         setattr(schedule, key, value)
     db.commit()
     db.refresh(schedule)
+    reload_scheduler()
     return schedule
 
 
@@ -70,6 +73,7 @@ def delete_schedule(schedule_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Schedule not found")
     db.delete(schedule)
     db.commit()
+    reload_scheduler()
 
 
 @router.post("/trigger", response_model=TriggerResult, status_code=200)

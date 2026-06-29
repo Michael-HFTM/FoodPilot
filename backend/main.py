@@ -1,14 +1,24 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
 from database import init_db
 from api import feeding, status, history
+from scheduler import reload_scheduler, scheduler
 
-app = FastAPI(title="Foodpilot API")
 
-# Create DB tables on startup
-init_db()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_db()
+    reload_scheduler()
+    scheduler.start()
+    yield
+    scheduler.shutdown(wait=False)
+
+
+app = FastAPI(title="Foodpilot API", lifespan=lifespan)
 
 # API routes
 app.include_router(feeding.router, prefix="/api/feeding", tags=["feeding"])
