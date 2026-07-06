@@ -42,9 +42,9 @@ backed by a REST API and hardware control layer.
 
 **Responsibilities:**
 - Feeding schedule management (create, edit, delete)
-- Live status display (fill level, last feeding, errors)
-- Manual feeding trigger
-- Feeding history / log view
+- Live status display (bowl food sensor, today's portions, last feeding) with 10 s polling
+- Manual feeding trigger (floating action button)
+- Feeding history / log view with live refresh
 
 ### Backend (FastAPI / Python)
 - Runs as a systemd service on the Raspberry Pi
@@ -53,57 +53,74 @@ backed by a REST API and hardware control layer.
 
 **Responsibilities:**
 - REST API endpoints under `/api/`
-- Business logic (scheduling, portion calculation)
+- Automatic execution of feeding schedules (APScheduler, `scheduler.py`)
 - Database access
-- Triggering hardware actions
+- Triggering hardware actions and verifying feeding success
+
+### Scheduler (APScheduler)
+- A `BackgroundScheduler` is started/stopped in the FastAPI lifespan
+- `reload_scheduler()` registers one cron job per enabled `feeding_schedule`
+  row and is called after every schedule create/update/delete
+- Each job dispenses the configured size and writes a `feeding_log` and a
+  `system_status` row
 
 ### Hardware Layer (Python module)
-- Abstracted behind a clean interface, decoupled from API logic
-- Initially implemented as stubs (logging only)
-- Replaced with real GPIO implementation once hardware is defined
+- Abstracted behind a clean interface (`hardware/dispenser.py`,
+  `hardware/sensors.py`), decoupled from API logic
+- Implemented with **gpiozero**; devices are lazy-initialized on first use
+- On machines without a GPIO pin factory (e.g. the dev laptop) the modules
+  fall back to logging-only stubs, so the backend runs anywhere
 
-**Planned responsibilities:**
-- Triggering the dispenser motor
-- Reading fill-level sensor
-- Detecting faults / blockages
+**Responsibilities:**
+- Driving the dispenser motor: PWM on BCM pin 18, direction on BCM pin 23;
+  run-time per portion size via `SIZE_RUNTIME_SECONDS` (small 10 s,
+  medium 20 s, large 30 s)
+- Reading the bowl food sensor (digital input on BCM pin 17)
+- Verifying a feeding: after the motor runs, the bowl sensor must report
+  food present, otherwise the feeding is logged as failed
 
 ### Database (SQLite)
 - Embedded, no separate server required
 - Managed via SQLAlchemy ORM
 
-**Planned tables:**
-- `feeding_schedule` – scheduled feeding times and size (`small` | `medium` | `large`)
-- `feeding_log` – history of executed feedings (records the size dispensed)
-- `system_status` – current sensor readings and error states
+**Tables:**
+- `feeding_schedule` – scheduled feeding times, size (`small` | `medium` | `large`), enabled flag
+- `feeding_log` – history of executed feedings (size, success, note; `schedule_id = NULL` for manual triggers)
+- `system_status` – snapshot per feeding: bowl sensor state and error message
 
 ## Project Structure
 
 ```
 foodpilot/
 ├── backend/
-│   ├── main.py              # FastAPI app, static file serving
+│   ├── main.py              # FastAPI app, lifespan (init_db + scheduler), static file serving
+│   ├── scheduler.py         # APScheduler: cron jobs for enabled schedules
 │   ├── api/
-│   │   ├── feeding.py       # Feeding schedule endpoints
-│   │   ├── status.py        # System status endpoints
-│   │   └── history.py       # Feeding log endpoints
+│   │   ├── feeding.py       # Schedule CRUD + manual trigger endpoints
+│   │   ├── status.py        # Live bowl sensor status endpoint
+│   │   └── history.py       # Feeding log endpoint
 │   ├── hardware/
 │   │   ├── __init__.py
-│   │   ├── dispenser.py     # Motor control (stub -> real)
-│   │   └── sensors.py       # Fill level, fault detection (stub -> real)
+│   │   ├── dispenser.py     # PWM motor control via gpiozero (stub fallback off-Pi)
+│   │   └── sensors.py       # Bowl food sensor via gpiozero (stub fallback off-Pi)
 │   ├── models/
-│   │   ├── feeding.py       # SQLAlchemy models
-│   │   └── status.py
+│   │   ├── base.py          # Declarative base
+│   │   ├── feeding.py       # FeedingSchedule, FeedingLog, Size enum
+│   │   └── status.py        # SystemStatus
 │   ├── database.py          # DB connection and session
 │   └── requirements.txt
 ├── frontend/
-│   ├── src/
-│   │   └── app/
-│   │       ├── schedule/    # Schedule management feature
-│   │       ├── status/      # Live status feature
-│   │       └── history/     # Feeding history feature
+│   ├── src/app/
+│   │   ├── components/
+│   │   │   ├── feeding-schedule/  # Schedule management (default route)
+│   │   │   ├── status/            # Live status view (/status)
+│   │   │   ├── history/           # Feeding history view (/verlauf)
+│   │   │   ├── feed-now-fab/      # Manual feeding trigger
+│   │   │   └── nav-bar/           # Bottom navigation
+│   │   └── services/              # feeding, status, history, overlay
 │   └── dist/                # Built output (deployed to Pi)
 ├── deploy.ps1               # PowerShell: build frontend + scp to Pi + restart service
-├── ARCHITECTURE.md
+├── docs/                    # This documentation
 └── README.md
 ```
 
@@ -129,13 +146,14 @@ http://Pi-FoodPilot:8000
 
 ## Technology Stack
 
-| Layer    | Technology               | Reason                                              |
-|----------|--------------------------|-----------------------------------------------------|
-| Frontend | Angular                  | Team is actively learning it in class               |
-| Backend  | FastAPI (Python)         | Lightweight, async, same language as hardware layer |
-| Database | SQLite + SQLAlchemy      | No server needed, sufficient for this use case      |
-| Hardware | RPi.GPIO / gpiozero      | Standard Pi GPIO libraries                          |
-| Runtime  | Raspberry Pi OS (64-bit) | Target hardware                                     |
+| Layer      | Technology               | Reason                                              |
+|------------|--------------------------|-----------------------------------------------------|
+| Frontend   | Angular (signals)        | Team is actively learning it in class               |
+| Backend    | FastAPI (Python)         | Lightweight, async, same language as hardware layer |
+| Scheduling | APScheduler              | In-process cron jobs, no external scheduler needed  |
+| Database   | SQLite + SQLAlchemy      | No server needed, sufficient for this use case      |
+| Hardware   | gpiozero                 | Standard Pi GPIO library with pluggable pin factory |
+| Runtime    | Raspberry Pi OS (64-bit) | Target hardware                                     |
 
 ## Out of Scope
 - HTTPS / external access (possible later extension)
