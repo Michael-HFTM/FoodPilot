@@ -1,9 +1,13 @@
-import { Component, computed, effect, inject, signal } from '@angular/core';
+import { Component, effect, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { interval } from 'rxjs';
 
-import { History } from '../../services/history';
+import { FeedingLog, History } from '../../services/history';
 import { Overlay } from '../../services/overlay';
 import { StatusData, StatusService } from '../../services/status';
 import { Size } from '../../services/feeding';
+
+const POLL_INTERVAL_MS = 10_000;
 
 @Component({
   selector: 'app-status',
@@ -19,19 +23,7 @@ export class Status {
   readonly error = signal<string | null>(null);
   readonly todayCount = signal<number | null>(null);
   readonly todaySizes = signal<Record<Size, number> | null>(null);
-
-  readonly fillPercent = computed(() => {
-    const level = this.data()?.fill_level;
-    return level !== null && level !== undefined ? Math.round(level * 100) : null;
-  });
-
-  readonly fillColor = computed(() => {
-    const pct = this.fillPercent();
-    if (pct === null) return 'bg-slate-300';
-    if (pct >= 40) return 'bg-emerald-500';
-    if (pct >= 20) return 'bg-amber-400';
-    return 'bg-red-500';
-  });
+  readonly lastFeeding = signal<FeedingLog | null>(null);
 
   constructor() {
     this.load();
@@ -40,6 +32,9 @@ export class Status {
         this.load();
       }
     });
+    interval(POLL_INTERVAL_MS)
+      .pipe(takeUntilDestroyed())
+      .subscribe(() => this.load());
   }
 
   load(): void {
@@ -69,8 +64,28 @@ export class Status {
           medium: todayLogs.filter((l) => l.size === 'medium').length,
           large:  todayLogs.filter((l) => l.size === 'large').length,
         });
+
+        const latest = logs.reduce<FeedingLog | null>((latest, log) => {
+          if (!latest || new Date(log.triggered_at) > new Date(latest.triggered_at)) {
+            return log;
+          }
+          return latest;
+        }, null);
+        this.lastFeeding.set(latest);
       },
-      error: () => { this.todayCount.set(null); this.todaySizes.set(null); },
+      error: () => {
+        this.todayCount.set(null);
+        this.todaySizes.set(null);
+        this.lastFeeding.set(null);
+      },
     });
+  }
+
+  formatDate(iso: string): string {
+    return new Date(iso).toLocaleDateString('de-CH');
+  }
+
+  formatTime(iso: string): string {
+    return new Date(iso).toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit' });
   }
 }

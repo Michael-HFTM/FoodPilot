@@ -2,23 +2,36 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+PIN_FOOD_SENSOR = 17  # BCM numbering
 
-def read_fill_level() -> float | None:
-    """
-    Read the fill-level sensor.
-    Returns a float 0.0–1.0, or None if the sensor is unavailable.
-    Stub: returns a fixed value. Replace with real sensor read.
-    """
-    logger.info("[STUB] Reading fill level")
-    # TODO: implement actual sensor read
-    return 0.75
+_device = None
+_device_init_failed = False
 
 
-def is_blocked() -> bool:
+def _get_device():
+    global _device, _device_init_failed
+    if _device is not None or _device_init_failed:
+        return _device
+    try:
+        from gpiozero import DigitalInputDevice
+        _device = DigitalInputDevice(PIN_FOOD_SENSOR)
+    except Exception:
+        logger.warning(
+            "GPIO pin factory unavailable, falling back to stub sensor reading",
+            exc_info=True,
+        )
+        _device_init_failed = True
+    return _device
+
+
+def read_food_present() -> bool:
     """
-    Check whether the dispenser is blocked.
-    Stub: always returns False.
+    Read the bowl's food sensor (digital 1/0 signal on PIN_FOOD_SENSOR).
+    Returns True if food is present in the bowl, False if empty.
+    Falls back to a fixed stub value if no real GPIO pin factory is available.
     """
-    logger.info("[STUB] Checking for blockage")
-    # TODO: implement blockage detection
-    return False
+    device = _get_device()
+    if device is None:
+        logger.info("[STUB] Reading food sensor")
+        return True
+    return bool(device.value)

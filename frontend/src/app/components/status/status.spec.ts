@@ -7,6 +7,5 @@ describe('Status', () => {
     fixture.detectChanges();
     const html = fixture.nativeElement as HTMLElement;
     expect(html.textContent).toContain('Status');
-    expect(html.textContent).toContain('Demnächst verfügbar');
   });
 });
