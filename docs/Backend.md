@@ -30,12 +30,18 @@ The API will be accessible at `http://localhost:8000`.
 
 ## What happens on startup
 
-- `init_db()` runs on import and creates the SQLite file `foodpilot.db` in the **current working directory** (so running from `backend/` vs. the repo root will place the DB in different locations).
+- The FastAPI **lifespan** (see `main.py`) runs `init_db()`, which creates the SQLite file `foodpilot.db` in the **current working directory** (so running from `backend/` vs. the repo root will place the DB in different locations).
+- The lifespan then starts the APScheduler `BackgroundScheduler` and registers one cron job per enabled feeding schedule (`scheduler.py`). Jobs are re-registered after every schedule create/update/delete.
 - If `backend/static/` exists, FastAPI mounts it at `/` and serves the Angular SPA. Otherwise `GET /` returns a JSON placeholder.
+- On machines without GPIO (dev laptop), the hardware modules log a warning on first use and fall back to stubs — no motor runs, the bowl sensor reads "food present".
 
 ## API Endpoints
 
-See the API table in [AGENTS.md](../AGENTS.md). All routes are under `/api/`.
+See the API table in [AGENTS.md](../AGENTS.md). All routes are under `/api/`:
+
+- `/api/feeding/` – schedule CRUD and manual trigger (`POST /api/feeding/trigger?size=small|medium|large`)
+- `/api/status/` – live bowl sensor reading (`{ "food_present": bool }`)
+- `/api/history/` – feeding log (default limit 50, max 500)
 
 ## Tests / Lint / Typecheck
 
