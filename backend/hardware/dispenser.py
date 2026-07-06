@@ -1,26 +1,44 @@
 import logging
+from time import sleep
+
+from gpiozero import DigitalOutputDevice, PWMOutputDevice
 
 from models.feeding import Size
 
 logger = logging.getLogger(__name__)
 
+# GPIO channels
+PWM_PIN = 18
+DIR_PIN = 23
+pwm = PWMOutputDevice(PWM_PIN)
+direction = DigitalOutputDevice(DIR_PIN)
 
-# Placeholder runtime in seconds for each portion size.
-# Will be replaced with real calibration once the dispenser hardware is defined.
+DISPENSE_SPEED = 1
+
+# runtime in seconds for each portion size.
 SIZE_RUNTIME_SECONDS: dict[Size, int] = {
-    Size.SMALL:  2,
-    Size.MEDIUM: 4,
-    Size.LARGE:  6,
+    Size.SMALL:  10,
+    Size.MEDIUM: 20,
+    Size.LARGE:  30,
 }
-
 
 def trigger_feeding(size: Size) -> bool:
     """
     Trigger the dispenser motor for the given portion size.
     Returns True on success, False on failure.
-    Stub: logs only. Replace with GPIO implementation once hardware is defined.
     """
     runtime_s = SIZE_RUNTIME_SECONDS[size]
-    logger.info(f"[STUB] Dispensing size={size.value} ({runtime_s}s)")
-    # TODO: implement GPIO motor control
-    return True
+    logger.info(f"Dispensing size={size.value} ({runtime_s}s)")
+    try:
+        # TODO: evtl. richtung anpassen
+        direction.on()
+        pwm.value = DISPENSE_SPEED
+        sleep(runtime_s)
+        return True
+
+    except Exception:
+        logger.exception(f"Failed to dispense size={size.value}")
+        return False
+
+    finally:
+        pwm.value = 0
