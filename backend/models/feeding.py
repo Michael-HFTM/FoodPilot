@@ -1,6 +1,6 @@
 from enum import Enum
 
-from sqlalchemy import Column, Integer, String, DateTime, Boolean
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey
 from datetime import datetime
 
 from models.base import Base
@@ -27,7 +27,12 @@ class FeedingLog(Base):
     __tablename__ = "feeding_log"
 
     id           = Column(Integer, primary_key=True, index=True)
-    schedule_id  = Column(Integer, nullable=True)        # None = manual trigger
+    # None = manual trigger; set to NULL when the schedule is deleted
+    schedule_id  = Column(
+        Integer,
+        ForeignKey("feeding_schedule.id", ondelete="SET NULL"),
+        nullable=True,
+    )
     triggered_at = Column(DateTime, default=datetime.now)
     size         = Column(String, nullable=False)        # Size at the time of dispense
     success      = Column(Boolean, nullable=False)

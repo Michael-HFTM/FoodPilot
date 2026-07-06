@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import Literal
 
@@ -18,7 +18,8 @@ SizeLiteral = Literal["small", "medium", "large"]
 
 class ScheduleCreate(BaseModel):
     name:    str
-    time:    str                  # "HH:MM"
+    # "HH:MM", 24h — invalid values would poison reload_scheduler() after commit
+    time:    str = Field(pattern=r"^([01]\d|2[0-3]):[0-5]\d$")
     size:    SizeLiteral
     enabled: bool = True
 
