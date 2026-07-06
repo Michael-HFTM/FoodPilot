@@ -3,6 +3,7 @@ from time import sleep
 
 from gpiozero import DigitalOutputDevice, PWMOutputDevice
 
+from hardware import sensors
 from models.feeding import Size
 
 logger = logging.getLogger(__name__)
@@ -24,8 +25,9 @@ SIZE_RUNTIME_SECONDS: dict[Size, int] = {
 
 def trigger_feeding(size: Size) -> bool:
     """
-    Trigger the dispenser motor for the given portion size.
-    Returns True on success, False on failure.
+    Trigger the dispenser motor for the given portion size, then verify
+    the bowl sensor reports food present. Returns False if the motor
+    itself failed or if the bowl sensor still reports no food afterwards.
     """
     runtime_s = SIZE_RUNTIME_SECONDS[size]
     logger.info(f"Dispensing size={size.value} ({runtime_s}s)")
@@ -34,7 +36,7 @@ def trigger_feeding(size: Size) -> bool:
         direction.on()
         pwm.value = DISPENSE_SPEED
         sleep(runtime_s)
-        return True
+        return sensors.read_food_present()
 
     except Exception:
         logger.exception(f"Failed to dispense size={size.value}")

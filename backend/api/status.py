@@ -7,13 +7,11 @@ router = APIRouter()
 
 
 class StatusOut(BaseModel):
-    fill_level: float | None
-    is_blocked: bool
+    food_present: bool
 
 
 @router.get("/", response_model=StatusOut)
 def get_status():
     return StatusOut(
-        fill_level=sensors.read_fill_level(),
-        is_blocked=sensors.is_blocked(),
+        food_present=sensors.read_food_present(),
     )

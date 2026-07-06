@@ -46,42 +46,50 @@
         }
       </div>
 
-      <!-- Füllstand -->
+      <!-- Futterschale -->
       <div class="rounded-2xl bg-white shadow-sm border border-slate-200 p-5">
-        <p class="text-sm font-medium text-slate-500 mb-3">Füllstand</p>
-        @if (fillPercent() !== null) {
-          <div class="flex items-center gap-4">
-            <div class="flex-1 h-4 rounded-full bg-slate-100 overflow-hidden">
-              <div
-                class="h-full rounded-full transition-all duration-500"
-                [class]="fillColor()"
-                [style.width.%]="fillPercent()"
-              ></div>
-            </div>
-            <span class="text-2xl font-semibold text-slate-900 w-16 text-right">{{ fillPercent() }}&nbsp;%</span>
-          </div>
-        } @else {
-          <p class="text-slate-400 text-sm">Sensor nicht verfügbar</p>
-        }
-      </div>
-
-      <!-- Dispenser-Status -->
-      <div class="rounded-2xl bg-white shadow-sm border border-slate-200 p-5">
-        <p class="text-sm font-medium text-slate-500 mb-3">Dispenser</p>
-        @if (d.is_blocked) {
-          <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-100 text-red-700 font-medium text-sm">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16" aria-hidden="true">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
-            </svg>
-            Blockiert
-          </div>
-        } @else {
+        <p class="text-sm font-medium text-slate-500 mb-3">Futterschale</p>
+        @if (d.food_present) {
           <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-100 text-emerald-700 font-medium text-sm">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16" aria-hidden="true">
               <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
             </svg>
-            OK
+            Futter vorhanden
           </div>
+        } @else {
+          <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-100 text-red-700 font-medium text-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16" aria-hidden="true">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+            </svg>
+            Schale leer
+          </div>
+        }
+      </div>
+
+      <!-- Letzte Fütterung -->
+      <div class="rounded-2xl bg-white shadow-sm border border-slate-200 p-5">
+        <p class="text-sm font-medium text-slate-500 mb-3">Letzte Fütterung</p>
+        @if (lastFeeding(); as feeding) {
+          <div class="flex items-center justify-between gap-3">
+            @if (feeding.success) {
+              <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-100 text-emerald-700 font-medium text-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16" aria-hidden="true">
+                  <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+                </svg>
+                Erfolgreich
+              </div>
+            } @else {
+              <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-100 text-red-700 font-medium text-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16" aria-hidden="true">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                </svg>
+                Fehlgeschlagen
+              </div>
+            }
+            <span class="text-sm text-slate-500">{{ formatDate(feeding.triggered_at) }} · {{ formatTime(feeding.triggered_at) }}</span>
+          </div>
+        } @else {
+          <p class="text-slate-400 text-sm">Noch keine Fütterung protokolliert</p>
         }
       </div>
 

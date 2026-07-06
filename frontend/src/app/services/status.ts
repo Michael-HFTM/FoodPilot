@@ -4,8 +4,7 @@ import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
 export interface StatusData {
-  readonly fill_level: number | null;
-  readonly is_blocked: boolean;
+  readonly food_present: boolean;
 }
 
 @Service()

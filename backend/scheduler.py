@@ -6,6 +6,7 @@ from apscheduler.triggers.cron import CronTrigger
 from database import SessionLocal
 from hardware.dispenser import trigger_feeding
 from models.feeding import FeedingLog, FeedingSchedule, Size
+from models.status import SystemStatus
 
 logger = logging.getLogger("uvicorn.error")
 
@@ -21,6 +22,10 @@ def _run_scheduled_feeding(schedule_id: int, size: str) -> None:
             size=size,
             success=success,
             note=None if success else "Scheduled feeding failed",
+        ))
+        db.add(SystemStatus(
+            food_present=success,
+            error_msg=None if success else "Schale nach Fütterung weiterhin leer",
         ))
         db.commit()
         logger.info(f"Scheduled feeding {schedule_id} ({size}): {'ok' if success else 'FAILED'}")
