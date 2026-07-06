@@ -6,8 +6,7 @@ from typing import Literal
 
 from database import get_db
 from models.feeding import FeedingSchedule, FeedingLog, Size
-from models.status import SystemStatus
-from hardware.dispenser import trigger_feeding
+from hardware.dispenser import DispenserBusyError, trigger_feeding
 from scheduler import reload_scheduler
 
 router = APIRouter()
@@ -83,17 +82,15 @@ def manual_trigger(
     db: Session = Depends(get_db),
 ):
     """Manually trigger a feeding of the given size."""
-    success = trigger_feeding(Size(size))
-    log = FeedingLog(
+    try:
+        success = trigger_feeding(Size(size))
+    except DispenserBusyError:
+        raise HTTPException(status_code=409, detail="Es läuft bereits eine Fütterung")
+    db.add(FeedingLog(
         schedule_id=None,
         size=size,
         success=success,
         note=None if success else "Manual trigger failed",
-    )
-    db.add(log)
-    db.add(SystemStatus(
-        food_present=success,
-        error_msg=None if success else "Schale nach Fütterung weiterhin leer",
     ))
     db.commit()
     return TriggerResult(success=success, size=size)

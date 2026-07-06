@@ -41,7 +41,7 @@ backend/
   database.py          # SQLAlchemy engine + init_db() with explicit model imports
   scheduler.py         # APScheduler BackgroundScheduler + reload_scheduler()
   api/                 # Routers: feeding, status, history
-  models/              # ORM models: base.py, feeding.py, status.py
+  models/              # ORM models: base.py, feeding.py
   hardware/            # gpiozero GPIO with stub fallback — dispenser.py, sensors.py
 frontend/
   src/app/

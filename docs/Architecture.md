@@ -61,8 +61,7 @@ backed by a REST API and hardware control layer.
 - A `BackgroundScheduler` is started/stopped in the FastAPI lifespan
 - `reload_scheduler()` registers one cron job per enabled `feeding_schedule`
   row and is called after every schedule create/update/delete
-- Each job dispenses the configured size and writes a `feeding_log` and a
-  `system_status` row
+- Each job dispenses the configured size and writes a `feeding_log` row
 
 ### Hardware Layer (Python module)
 - Abstracted behind a clean interface (`hardware/dispenser.py`,
@@ -76,8 +75,11 @@ backed by a REST API and hardware control layer.
   run-time per portion size via `SIZE_RUNTIME_SECONDS` (small 10 s,
   medium 20 s, large 30 s)
 - Reading the bowl food sensor (digital input on BCM pin 17)
-- Verifying a feeding: after the motor runs, the bowl sensor must report
-  food present, otherwise the feeding is logged as failed
+- Verifying a feeding: after the motor stops and a short settle delay, the
+  bowl sensor must report food present, otherwise the feeding is logged as
+  failed
+- Preventing overlapping feedings: a non-blocking lock rejects a second
+  trigger while one is running (API responds 409, scheduler logs a skip)
 
 ### Database (SQLite)
 - Embedded, no separate server required
@@ -86,7 +88,6 @@ backed by a REST API and hardware control layer.
 **Tables:**
 - `feeding_schedule` – scheduled feeding times, size (`small` | `medium` | `large`), enabled flag
 - `feeding_log` – history of executed feedings (size, success, note; `schedule_id = NULL` for manual triggers)
-- `system_status` – snapshot per feeding: bowl sensor state and error message
 
 ## Project Structure
 
@@ -105,8 +106,7 @@ foodpilot/
 │   │   └── sensors.py       # Bowl food sensor via gpiozero (stub fallback off-Pi)
 │   ├── models/
 │   │   ├── base.py          # Declarative base
-│   │   ├── feeding.py       # FeedingSchedule, FeedingLog, Size enum
-│   │   └── status.py        # SystemStatus
+│   │   └── feeding.py       # FeedingSchedule, FeedingLog, Size enum
 │   ├── database.py          # DB connection and session
 │   └── requirements.txt
 ├── frontend/
