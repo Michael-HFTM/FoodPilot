@@ -4,9 +4,8 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 
 from database import SessionLocal
-from hardware.dispenser import trigger_feeding
+from hardware.dispenser import DispenserBusyError, trigger_feeding
 from models.feeding import FeedingLog, FeedingSchedule, Size
-from models.status import SystemStatus
 
 logger = logging.getLogger("uvicorn.error")
 
@@ -16,16 +15,17 @@ scheduler = BackgroundScheduler()
 def _run_scheduled_feeding(schedule_id: int, size: str) -> None:
     db = SessionLocal()
     try:
-        success = trigger_feeding(Size(size))
+        try:
+            success = trigger_feeding(Size(size))
+            note = None if success else "Scheduled feeding failed"
+        except DispenserBusyError:
+            success = False
+            note = "Skipped: another feeding was already running"
         db.add(FeedingLog(
             schedule_id=schedule_id,
             size=size,
             success=success,
-            note=None if success else "Scheduled feeding failed",
-        ))
-        db.add(SystemStatus(
-            food_present=success,
-            error_msg=None if success else "Schale nach Fütterung weiterhin leer",
+            note=note,
         ))
         db.commit()
         logger.info(f"Scheduled feeding {schedule_id} ({size}): {'ok' if success else 'FAILED'}")

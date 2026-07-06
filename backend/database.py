@@ -18,5 +18,4 @@ def get_db():
 
 def init_db():
     import models.feeding  # noqa: F401 – registers models
-    import models.status   # noqa: F401
     Base.metadata.create_all(bind=engine)
