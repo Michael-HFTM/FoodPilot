@@ -24,10 +24,11 @@ def _get_device():
     return _device
 
 
-def read_food_present() -> bool:
+def read_food_flowing() -> bool:
     """
-    Read the bowl's food sensor (digital 1/0 signal on PIN_FOOD_SENSOR).
-    Returns True if food is present in the bowl, False if empty.
+    Read the flow sensor (digital 1/0 signal on PIN_FOOD_SENSOR).
+    Returns True while food is falling past the sensor, False otherwise.
+    Only meaningful while the dispenser motor is running.
     Falls back to a fixed stub value if no real GPIO pin factory is available.
     """
     device = _get_device()
