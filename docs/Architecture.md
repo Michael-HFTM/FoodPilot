@@ -74,7 +74,7 @@ backed by a REST API and hardware control layer.
 - Driving the dispenser motor: PWM on BCM pin 18, direction on BCM pin 23;
   run-time per portion size via `SIZE_RUNTIME_SECONDS` (small 10 s,
   medium 20 s, large 30 s)
-- Reading the bowl food sensor (digital input on BCM pin 17)
+- Reading the bowl food sensor (digital input on BCM pin 24)
 - Verifying a feeding: after the motor stops and a short settle delay, the
   bowl sensor must report food present, otherwise the feeding is logged as
   failed

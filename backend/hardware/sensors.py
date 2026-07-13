@@ -2,7 +2,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-PIN_FOOD_SENSOR = 17  # BCM numbering
+PIN_FOOD_SENSOR = 24  # BCM numbering
 
 _device = None
 _device_init_failed = False

@@ -80,7 +80,7 @@ frontend/
 
 **Single-process deployment**: FastAPI serves both the Angular SPA (mounted at `/`) and the REST API (under `/api/`). The Angular build must be copied to `backend/static/` before it is served; if that directory is absent, `GET /` returns a JSON placeholder.
 
-**Hardware layer with stub fallback**: `backend/hardware/dispenser.py` drives a PWM motor (gpiozero `PWMOutputDevice` on BCM 18, direction pin on BCM 23); `sensors.py` reads a digital bowl food sensor (BCM 17). GPIO devices are lazy-initialized on first use — if no real pin factory is available (e.g. Windows/dev machine), both modules log a warning once and fall back to stub behavior (no motor, sensor reads `True`). `SIZE_RUNTIME_SECONDS` in `dispenser.py` maps `small/medium/large` to motor run-time in seconds.
+**Hardware layer with stub fallback**: `backend/hardware/dispenser.py` drives a PWM motor (gpiozero `PWMOutputDevice` on BCM 18, direction pin on BCM 23); `sensors.py` reads a digital bowl food sensor (BCM 24). GPIO devices are lazy-initialized on first use — if no real pin factory is available (e.g. Windows/dev machine), both modules log a warning once and fall back to stub behavior (no motor, sensor reads `True`). `SIZE_RUNTIME_SECONDS` in `dispenser.py` maps `small/medium/large` to motor run-time in seconds.
 
 **Feeding verification**: `trigger_feeding()` runs the motor, stops it, waits `SENSOR_SETTLE_SECONDS` for the food to settle, then checks the bowl sensor; a feeding counts as failed if the bowl still reports no food. Every dispense (scheduled or manual) writes a `FeedingLog` row. Concurrent feedings are prevented by a non-blocking lock — a second trigger raises `DispenserBusyError` (the API returns 409, the scheduler logs a skipped feeding).
 
