@@ -42,7 +42,7 @@ backed by a REST API and hardware control layer.
 
 **Responsibilities:**
 - Feeding schedule management (create, edit, delete)
-- Live status display (bowl food sensor, today's portions, last feeding) with 10 s polling
+- Status display (last feeding result, today's portions, last feeding) with 10 s polling
 - Manual feeding trigger (floating action button)
 - Feeding history / log view with live refresh
 
@@ -74,10 +74,12 @@ backed by a REST API and hardware control layer.
 - Driving the dispenser motor: PWM on BCM pin 18, direction on BCM pin 23;
   run-time per portion size via `SIZE_RUNTIME_SECONDS` (small 10 s,
   medium 20 s, large 30 s)
-- Reading the bowl food sensor (digital input on BCM pin 24)
-- Verifying a feeding: after the motor stops and a short settle delay, the
-  bowl sensor must report food present, otherwise the feeding is logged as
-  failed
+- Reading the food flow sensor (digital input on BCM pin 24), which detects
+  food falling past it while the motor runs
+- Verifying a feeding: shortly after motor start, the flow sensor is polled
+  for falling food; if none is detected within the detection window, the
+  motor stops early and the feeding is logged as failed (hopper empty or
+  jammed)
 - Preventing overlapping feedings: a non-blocking lock rejects a second
   trigger while one is running (API responds 409, scheduler logs a skip)
 
@@ -98,12 +100,12 @@ foodpilot/
 │   ├── scheduler.py         # APScheduler: cron jobs for enabled schedules
 │   ├── api/
 │   │   ├── feeding.py       # Schedule CRUD + manual trigger endpoints
-│   │   ├── status.py        # Live bowl sensor status endpoint
+│   │   ├── status.py        # Status endpoint (last feeding result)
 │   │   └── history.py       # Feeding log endpoint
 │   ├── hardware/
 │   │   ├── __init__.py
 │   │   ├── dispenser.py     # PWM motor control via gpiozero (stub fallback off-Pi)
-│   │   └── sensors.py       # Bowl food sensor via gpiozero (stub fallback off-Pi)
+│   │   └── sensors.py       # Food flow sensor via gpiozero (stub fallback off-Pi)
 │   ├── models/
 │   │   ├── base.py          # Declarative base
 │   │   └── feeding.py       # FeedingSchedule, FeedingLog, Size enum

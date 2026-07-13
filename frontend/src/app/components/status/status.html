@@ -46,22 +46,22 @@
         }
       </div>
 
-      <!-- Futterschale -->
+      <!-- Futterausgabe -->
       <div class="rounded-2xl bg-white shadow-sm border border-slate-200 p-5">
-        <p class="text-sm font-medium text-slate-500 mb-3">Futterschale</p>
+        <p class="text-sm font-medium text-slate-500 mb-3">Futterausgabe</p>
         @if (d.food_present) {
           <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-100 text-emerald-700 font-medium text-sm">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16" aria-hidden="true">
               <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
             </svg>
-            Futter vorhanden
+            Letzte Ausgabe erfolgreich
           </div>
         } @else {
           <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-100 text-red-700 font-medium text-sm">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16" aria-hidden="true">
               <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
             </svg>
-            Schale leer
+            Letzte Ausgabe fehlgeschlagen
           </div>
         }
       </div>

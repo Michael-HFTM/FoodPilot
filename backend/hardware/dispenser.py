@@ -1,6 +1,6 @@
 import logging
 from threading import Lock
-from time import sleep
+from time import monotonic, sleep
 
 from hardware import sensors
 from models.feeding import Size
@@ -13,9 +13,12 @@ DIR_PIN = 23
 
 DISPENSE_SPEED = 1
 
-# wait after the motor stops so dispensed food can settle in the bowl
-# before the sensor is read.
-SENSOR_SETTLE_SECONDS = 2
+# wait after motor start before checking the flow sensor, so the first
+# food has time to reach it.
+FLOW_DETECT_DELAY_SECONDS = 1
+# how long to poll the flow sensor for falling food before aborting.
+FLOW_DETECT_TIMEOUT_SECONDS = 2
+FLOW_POLL_INTERVAL_SECONDS = 0.01
 
 # runtime in seconds for each portion size.
 SIZE_RUNTIME_SECONDS: dict[Size, int] = {
@@ -59,11 +62,11 @@ def _get_motor_devices():
 
 def trigger_feeding(size: Size) -> bool:
     """
-    Trigger the dispenser motor for the given portion size, then verify
-    the bowl sensor reports food present. Returns False if the motor
-    itself failed or if the bowl sensor still reports no food afterwards.
-    Falls back to a stub (no motor control) if no real GPIO pin factory
-    is available.
+    Trigger the dispenser motor for the given portion size. Shortly after
+    the motor starts, the flow sensor is polled for falling food; if none
+    is detected within the detection window, the motor is stopped early
+    and the feeding counts as failed (hopper empty or jammed). Falls back
+    to a stub (no motor control) if no real GPIO pin factory is available.
 
     Raises DispenserBusyError if another feeding is currently running.
     """
@@ -80,20 +83,38 @@ def _dispense(size: Size) -> bool:
     pwm, direction = _get_motor_devices()
     if pwm is None:
         logger.info(f"[STUB] Dispensing size={size.value} ({runtime_s}s)")
-        return sensors.read_food_present()
+        return sensors.read_food_flowing()
 
     logger.info(f"Dispensing size={size.value} ({runtime_s}s)")
     try:
-        # TODO: evtl. richtung anpassen
         direction.on()
         pwm.value = DISPENSE_SPEED
-        sleep(runtime_s)
+        started_at = monotonic()
+
+        # poll the flow sensor while the motor runs; if no food falls past
+        # it within the detection window, the hopper is empty or jammed --
+        # stop early instead of running the motor dry for the full runtime
+        sleep(FLOW_DETECT_DELAY_SECONDS)
+        detect_deadline = monotonic() + FLOW_DETECT_TIMEOUT_SECONDS
+        while not sensors.read_food_flowing():
+            if monotonic() >= detect_deadline:
+                logger.error(
+                    f"No food flow detected within "
+                    f"{FLOW_DETECT_TIMEOUT_SECONDS}s, aborting dispense "
+                    f"(size={size.value})"
+                )
+                return False
+            sleep(FLOW_POLL_INTERVAL_SECONDS)
+
+        # food is flowing: let the motor finish the portion runtime,
+        # measured from motor start
+        remaining_s = runtime_s - (monotonic() - started_at)
+        if remaining_s > 0:
+            sleep(remaining_s)
     except Exception:
         logger.exception(f"Failed to dispense size={size.value}")
         return False
     finally:
         pwm.value = 0
 
-    # read the sensor only after the motor has stopped and the food settled
-    sleep(SENSOR_SETTLE_SECONDS)
-    return sensors.read_food_present()
+    return True

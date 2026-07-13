@@ -96,8 +96,8 @@ deploy.ps1              # PowerShell: build + scp + pip + systemctl restart
 | POST   | `/api/feeding/` | create schedule (reloads scheduler) |
 | PUT    | `/api/feeding/{id}` | update schedule (reloads scheduler) |
 | DELETE | `/api/feeding/{id}` | delete schedule (reloads scheduler) |
-| POST   | `/api/feeding/trigger?size=medium` | manual feed (`small\|medium\|large`), verifies via bowl sensor |
-| GET    | `/api/status/` | live bowl sensor reading: `{ "food_present": bool }` |
+| POST   | `/api/feeding/trigger?size=medium` | manual feed (`small\|medium\|large`), verifies via flow sensor |
+| GET    | `/api/status/` | success of the most recent feeding: `{ "food_present": bool }` |
 | GET    | `/api/history/` | feeding log, default limit 50, max 500 |
 | GET    | `/` | JSON placeholder, or Angular SPA if `backend/static/index.html` exists |
 
@@ -109,11 +109,12 @@ Interactive docs at `http://localhost:8000/docs` when uvicorn is running.
 |-----|--------|--------|
 | 18  | Dispenser motor PWM | `hardware/dispenser.py` |
 | 23  | Dispenser motor direction | `hardware/dispenser.py` |
-| 17  | Bowl food sensor (digital in) | `hardware/sensors.py` |
+| 24  | Food flow sensor (digital in) | `hardware/sensors.py` |
 
 `SIZE_RUNTIME_SECONDS` in `dispenser.py` maps portion size to motor run-time
 (small 10 s, medium 20 s, large 30 s). `trigger_feeding()` returns `False` if
-the motor fails **or** the bowl sensor still reports no food afterwards.
+the motor fails **or** no food falls past the flow sensor within the detection
+window after motor start (motor is then stopped early).
 
 ## Deploy to Pi
 
