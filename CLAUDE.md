@@ -55,7 +55,7 @@ backend/
 ├── main.py          # FastAPI app entry point; lifespan runs init_db() + scheduler; serves static/
 ├── database.py      # SQLAlchemy engine + session factory + init_db()
 ├── scheduler.py     # APScheduler BackgroundScheduler; one cron job per enabled schedule
-├── api/             # Route handlers (feeding.py, status.py, history.py)
+├── api/             # Route handlers (feeding.py, history.py)
 ├── models/          # SQLAlchemy ORM models (base.py, feeding.py)
 ├── hardware/        # Hardware layer via gpiozero (dispenser.py, sensors.py)
 └── static/          # Angular production build (served at /)
@@ -64,14 +64,13 @@ frontend/
 └── src/app/
     ├── services/
     │   ├── feeding.ts             # HttpClient wrapper for /api/feeding/*
-    │   ├── status.ts              # /api/status/
     │   ├── history.ts             # /api/history/
     │   └── overlay.ts             # cross-component UI state (FAB visibility, lastFeedAt)
     ├── components/
     │   ├── feeding-schedule/      # Schedule CRUD (main/default route)
     │   ├── feed-now-fab/          # Floating action button for manual trigger
     │   ├── nav-bar/               # Bottom navigation
-    │   ├── status/                # Route: /status (bowl state, today's portions, last feeding)
+    │   ├── status/                # Route: /status (today's portions, last feeding)
     │   └── history/               # Route: /verlauf (feeding log with live refresh)
     └── app.routes.ts              # Routes: '' → FeedingSchedule, 'status', 'verlauf'
 ```
@@ -82,7 +81,7 @@ frontend/
 
 **Hardware layer with stub fallback**: `backend/hardware/dispenser.py` drives a PWM motor (gpiozero `PWMOutputDevice` on BCM 18, direction pin on BCM 23); `sensors.py` reads a digital flow sensor that detects food falling past it during a dispense (BCM 24). GPIO devices are lazy-initialized on first use — if no real pin factory is available (e.g. Windows/dev machine), both modules log a warning once and fall back to stub behavior (no motor, sensor reads `True`). `SIZE_RUNTIME_SECONDS` in `dispenser.py` maps `small/medium/large` to motor run-time in seconds.
 
-**Feeding verification**: `trigger_feeding()` starts the motor, waits `FLOW_DETECT_DELAY_SECONDS`, then polls the flow sensor for up to `FLOW_DETECT_TIMEOUT_SECONDS`; if no food falls past the sensor in that window, the motor stops early and the feeding counts as failed (hopper empty or jammed). Otherwise the motor runs for the full portion runtime. `/api/status/` reports the success of the most recent `FeedingLog` entry (there is no live bowl reading with a flow sensor). Every dispense (scheduled or manual) writes a `FeedingLog` row. Concurrent feedings are prevented by a non-blocking lock — a second trigger raises `DispenserBusyError` (the API returns 409, the scheduler logs a skipped feeding).
+**Feeding verification**: `trigger_feeding()` starts the motor, waits `FLOW_DETECT_DELAY_SECONDS`, then polls the flow sensor for up to `FLOW_DETECT_TIMEOUT_SECONDS`; if no food falls past the sensor in that window, the motor stops early and the feeding counts as failed (hopper empty or jammed). Otherwise the motor runs for the full portion runtime. The status view derives everything (today's portions, last feeding success) from `/api/history/` — there is no live bowl reading with a flow sensor and no separate status endpoint. Every dispense (scheduled or manual) writes a `FeedingLog` row. Concurrent feedings are prevented by a non-blocking lock — a second trigger raises `DispenserBusyError` (the API returns 409, the scheduler logs a skipped feeding).
 
 **Scheduled feedings**: `backend/scheduler.py` holds an APScheduler `BackgroundScheduler`, started/stopped in the FastAPI lifespan. `reload_scheduler()` drops all jobs and re-registers a cron job per enabled `FeedingSchedule`; every schedule CRUD endpoint calls it after committing, so DB and scheduler never drift.
 

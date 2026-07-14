@@ -4,7 +4,6 @@ import { interval } from 'rxjs';
 
 import { FeedingLog, History } from '../../services/history';
 import { Overlay } from '../../services/overlay';
-import { StatusData, StatusService } from '../../services/status';
 import { Size } from '../../services/feeding';
 
 const POLL_INTERVAL_MS = 10_000;
@@ -14,13 +13,12 @@ const POLL_INTERVAL_MS = 10_000;
   templateUrl: './status.html',
 })
 export class Status {
-  private readonly statusService = inject(StatusService);
   private readonly historyService = inject(History);
   private readonly overlay = inject(Overlay);
 
-  readonly data = signal<StatusData | null>(null);
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
+  readonly loaded = signal(false);
   readonly todayCount = signal<number | null>(null);
   readonly todaySizes = signal<Record<Size, number> | null>(null);
   readonly lastFeeding = signal<FeedingLog | null>(null);
@@ -40,17 +38,6 @@ export class Status {
   load(): void {
     this.loading.set(true);
     this.error.set(null);
-
-    this.statusService.get().subscribe({
-      next: (data) => {
-        this.data.set(data);
-        this.loading.set(false);
-      },
-      error: (err: Error) => {
-        this.error.set(err.message);
-        this.loading.set(false);
-      },
-    });
 
     this.historyService.list(500).subscribe({
       next: (logs) => {
@@ -72,11 +59,15 @@ export class Status {
           return latest;
         }, null);
         this.lastFeeding.set(latest);
+        this.loaded.set(true);
+        this.loading.set(false);
       },
-      error: () => {
+      error: (err: Error) => {
         this.todayCount.set(null);
         this.todaySizes.set(null);
         this.lastFeeding.set(null);
+        this.error.set(err.message);
+        this.loading.set(false);
       },
     });
   }

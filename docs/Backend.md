@@ -40,7 +40,6 @@ The API will be accessible at `http://localhost:8000`.
 See the API table in [AGENTS.md](../AGENTS.md). All routes are under `/api/`:
 
 - `/api/feeding/` – schedule CRUD and manual trigger (`POST /api/feeding/trigger?size=small|medium|large`)
-- `/api/status/` – success of the most recent feeding (`{ "food_present": bool }`)
 - `/api/history/` – feeding log (default limit 50, max 500)
 
 ## Tests / Lint / Typecheck

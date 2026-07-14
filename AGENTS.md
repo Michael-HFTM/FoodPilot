@@ -97,7 +97,6 @@ deploy.ps1              # PowerShell: build + scp + pip + systemctl restart
 | PUT    | `/api/feeding/{id}` | update schedule (reloads scheduler) |
 | DELETE | `/api/feeding/{id}` | delete schedule (reloads scheduler) |
 | POST   | `/api/feeding/trigger?size=medium` | manual feed (`small\|medium\|large`), verifies via flow sensor |
-| GET    | `/api/status/` | success of the most recent feeding: `{ "food_present": bool }` |
 | GET    | `/api/history/` | feeding log, default limit 50, max 500 |
 | GET    | `/` | JSON placeholder, or Angular SPA if `backend/static/index.html` exists |
 

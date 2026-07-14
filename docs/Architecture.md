@@ -42,7 +42,7 @@ backed by a REST API and hardware control layer.
 
 **Responsibilities:**
 - Feeding schedule management (create, edit, delete)
-- Status display (last feeding result, today's portions, last feeding) with 10 s polling
+- Status display (today's portions, last feeding with success indicator) with 10 s polling
 - Manual feeding trigger (floating action button)
 - Feeding history / log view with live refresh
 
@@ -100,7 +100,6 @@ foodpilot/
 │   ├── scheduler.py         # APScheduler: cron jobs for enabled schedules
 │   ├── api/
 │   │   ├── feeding.py       # Schedule CRUD + manual trigger endpoints
-│   │   ├── status.py        # Status endpoint (last feeding result)
 │   │   └── history.py       # Feeding log endpoint
 │   ├── hardware/
 │   │   ├── __init__.py
@@ -119,7 +118,7 @@ foodpilot/
 │   │   │   ├── history/           # Feeding history view (/verlauf)
 │   │   │   ├── feed-now-fab/      # Manual feeding trigger
 │   │   │   └── nav-bar/           # Bottom navigation
-│   │   └── services/              # feeding, status, history, overlay
+│   │   └── services/              # feeding, history, overlay
 │   └── dist/                # Built output (deployed to Pi)
 ├── deploy.ps1               # PowerShell: build frontend + scp to Pi + restart service
 ├── docs/                    # This documentation
