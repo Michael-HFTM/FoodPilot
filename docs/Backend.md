@@ -37,10 +37,17 @@ The API will be accessible at `http://localhost:8000`.
 
 ## API Endpoints
 
-See the API table in [AGENTS.md](../AGENTS.md). All routes are under `/api/`:
+All API routes are under `/api/`:
 
-- `/api/feeding/` – schedule CRUD and manual trigger (`POST /api/feeding/trigger?size=small|medium|large`)
-- `/api/history/` – feeding log (default limit 50, max 500)
+| Method | Path | Notes |
+|--------|------|-------|
+| GET    | `/api/feeding/` | list schedules |
+| POST   | `/api/feeding/` | create schedule (reloads scheduler) |
+| PUT    | `/api/feeding/{id}` | update schedule (reloads scheduler) |
+| DELETE | `/api/feeding/{id}` | delete schedule (reloads scheduler) |
+| POST   | `/api/feeding/trigger?size=medium` | manual feed (`small\|medium\|large`), verifies via flow sensor |
+| GET    | `/api/history/` | feeding log, default limit 50, max 500 |
+| GET    | `/` | JSON placeholder, or Angular SPA if `backend/static/index.html` exists |
 
 ## Tests / Lint / Typecheck
 

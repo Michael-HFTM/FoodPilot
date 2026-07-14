@@ -77,7 +77,7 @@ frontend/
 
 ### Key design decisions
 
-**Single-process deployment**: FastAPI serves both the Angular SPA (mounted at `/`) and the REST API (under `/api/`). The Angular build must be copied to `backend/static/` before it is served; if that directory is absent, `GET /` returns a JSON placeholder.
+**Single-process deployment**: FastAPI serves both the Angular SPA (mounted at `/`) and the REST API (under `/api/`). The Angular build must be copied to `backend/static/` before it is served; if that directory is absent, `GET /` returns a JSON placeholder. The `app.mount("/", StaticFiles(...))` call must stay last in `main.py` — it swallows every path the routers don't claim.
 
 **Hardware layer with stub fallback**: `backend/hardware/dispenser.py` drives a PWM motor (gpiozero `PWMOutputDevice` on BCM 18, direction pin on BCM 23); `sensors.py` reads a digital flow sensor that detects food falling past it during a dispense (BCM 24). GPIO devices are lazy-initialized on first use — if no real pin factory is available (e.g. Windows/dev machine), both modules log a warning once and fall back to stub behavior (no motor, sensor reads `True`). `SIZE_RUNTIME_SECONDS` in `dispenser.py` maps `small/medium/large` to motor run-time in seconds.
 
@@ -87,7 +87,7 @@ frontend/
 
 **Portion sizes**: The domain uses `small | medium | large` (enum `Size`), stored as strings in SQLite. The `FeedingLog` table records every dispense event (scheduled or manual), with `schedule_id = None` for manual triggers.
 
-**DB location depends on CWD**: `database.py` uses `sqlite:///./foodpilot.db`, so the DB file is created in whatever directory uvicorn is started from. Run from `backend/` for a consistent path.
+**DB location depends on CWD**: `database.py` uses `sqlite:///./foodpilot.db`, so the DB file is created in whatever directory uvicorn is started from. Run from `backend/` for a consistent path. `init_db()` registers models via explicit `# noqa: F401` imports — new ORM models must be added there, or `create_all` won't see them.
 
 **Angular signals**: Components use Angular 22 signals (`signal()`, `computed()`, `effect()`) for local state rather than RxJS BehaviorSubjects. The status view additionally polls every 10 s via an RxJS `interval`.
 
