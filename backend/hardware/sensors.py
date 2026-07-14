@@ -35,4 +35,4 @@ def read_food_flowing() -> bool:
     if device is None:
         logger.info("[STUB] Reading food sensor")
         return True
-    return bool(device.value)
+    return not bool(device.value)
