@@ -31,6 +31,14 @@ On the dev machine:
 
 On the Pi (Raspberry Pi OS Lite 64-bit):
 - `python3` and `python3-venv` available
+- Build dependencies for `lgpio` (the gpiozero pin factory backend), since
+  pip has no prebuilt wheel for aarch64 and compiles it from source:
+  ```bash
+  sudo apt install -y swig python3-dev gcc liblgpio-dev liblgpio1
+  ```
+  Without these, `pip install -r requirements.txt` fails while building the
+  `lgpio` wheel (missing `swig`, then missing `-llgpio` if only the build
+  tools are installed without the native library).
 - The SSH user can run the deploy's `sudo systemctl ...` commands **without
   a password prompt** (the script runs them non-interactively over SSH and
   has no TTY to type one into). Grant this with `visudo`:
