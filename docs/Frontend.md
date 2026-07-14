@@ -31,7 +31,7 @@ ng build       # production build → frontend/dist/frontend/browser/
 
 - Routes (`src/app/app.routes.ts`): `''` → feeding schedule (CRUD), `/status` → live status view, `/verlauf` → feeding history. Unknown paths redirect to `''`.
 - Components use Angular 22 **signals** (`signal()`, `computed()`, `effect()`) for local state; the status view polls the backend every 10 seconds.
-- Services in `src/app/services/` (`feeding`, `status`, `history`) wrap the REST API with `HttpClient` and translate errors to German user messages; `overlay` holds cross-component UI state (FAB visibility, last manual feeding).
+- Services in `src/app/services/` (`feeding`, `history`) wrap the REST API with `HttpClient` and translate errors to German user messages; `overlay` holds cross-component UI state (FAB visibility, last manual feeding).
 
 ## Production Build Path
 

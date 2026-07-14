@@ -84,7 +84,7 @@ by this script — it is created and enabled manually on the Pi (see
    ```
 4. Verify:
    ```
-   curl http://127.0.0.1:8000/api/status/
+   curl http://127.0.0.1:8000/api/history/
    ```
 
 After this, `.\deploy.ps1` handles every subsequent deploy. Note that

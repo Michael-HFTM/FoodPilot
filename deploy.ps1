@@ -260,10 +260,10 @@ if (-not $NoRestart -and -not $DryRun) {
         exit 1
     }
 
-    Write-Log "Health check (GET /api/status/)"
+    Write-Log "Health check (GET /api/history/)"
     $healthy = $false
     for ($i = 1; $i -le 8; $i++) {
-        if (Test-Remote "curl -fsS http://127.0.0.1:8000/api/status/") {
+        if (Test-Remote "curl -fsS http://127.0.0.1:8000/api/history/") {
             $healthy = $true
             break
         }
